@@ -1,7 +1,7 @@
 <?php
 /**
  * @filesource error.php
- * @author Matthias Kerstner <info@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
  *
  * @param string? $message
  *

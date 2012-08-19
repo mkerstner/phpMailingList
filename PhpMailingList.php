@@ -2,8 +2,8 @@
 
 /**
  * @filesource PhpMailingList.php
- * @author Matthias Kerstner <info@kerstner.at>
- * @copyright Matthias Kerstner <info@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
+ * @copyright Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
  * @link http://www.kerstner.at/phpmailinglist

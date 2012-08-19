@@ -1,20 +1,20 @@
 <?php
 
 /**
- * Copyright (c) 2010 Matthias Kerstner <info@kerstner.at>
+ * Copyright (c) 2010 Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
  * @link http://www.kerstner.at/phpmailinglist
  *
  * @filesource Config.php
- * @author Matthias Kerstner <info@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
  */
 require_once 'lib/config/ConfigurationException.php';
 
 /**
  * Config
  *
- * @author Matthias Kerstner <info@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
  */
 abstract class Config {
 
