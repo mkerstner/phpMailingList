@@ -1,0 +1,48 @@
+
+ phpMailingList
+
+ A simple mailing list manager.
+
+ Copyright (C) 2012 Matthias Kerstner <info@kerstner.at>
+ See http://www.kerstner.at/phpmailinglist/ for more information.
+================================================================================
+
+1.) INSTALLATION
+-------------------------
+
+1.) Edit config.ini to your needs.
+2.) Edit form.php, members.php and error.php to your needs.
+3.) Be sure to set correct permissions for the lists-directory set in
+    config.ini.
+4.) Test your installation by creating a list, e.g.:
+
+    lists/mylist/
+
+5.) Call index.php?list=mylist to use your shiny new mailing list.
+
+    Hint: In case you get write permission errors be sure to set the correct
+          permissions for the lists-directory (and any subdirectories and
+          files).
+
+Enjoy!
+
+2.) CONFIGURATION
+--------------------------
+
+Everything you need (or can) configure can be found in config/config.ini. You
+are free to customize form.php and members.php to your needs. Make sure to leave
+the core input fields "as-is".
+
+3.) USAGE
+--------------------------
+
+phpMailingList provides the following core functionality:
+
+1.) subscribe: Add members to a mailing list via form.php
+2.) unsubscribe: Remove subscribed members from a mailing list
+3.) authorize: Authorize a subscription request
+4.) send message: Send messages to all members of a mailing list
+
+In order to prevent SPAM messages a CAPTCHA field has to be filled out prior to
+any of the action provided by form.php, i.e. subscribe, unsubscribe and send
+messages.
