@@ -1,0 +1,102 @@
+
+Release History
+---------------------------------
+
+Legend:
++ Added feature
+* Improved/changed feature
+- Bug fixed
+! Known issue / missing feature
+
+---------------------------------
+Version 1.7.3 - Aug 18, 2012
+---------------------------------
+
++ released on GitHub
+
+---------------------------------
+Version 1.7.2 - Jun 06, 2012
+---------------------------------
+
++ added error log
+- removed copyright notice in footer
+
+---------------------------------
+Version 1.7.1 - Nov 25, 2010
+---------------------------------
+
+- fixed warning when no list was specified
+
+---------------------------------
+Version 1.7 - Oct 18, 2010
+---------------------------------
+
++ added support for customizeable form, member and error file for mailing lists
+* optimized file reading of members file
+* updated config.ini
+
+---------------------------------
+Version 1.6 - Oct 17, 2010
+---------------------------------
+
+* updated CSS and HTML
+- fixed escaping of quotation character in messages
+- fixed bug in returning members list when members file was empty
+
+---------------------------------
+Version 1.5 - Oct 06, 2010
+---------------------------------
+
++ added option to notify admin email in case of member updates
++ lists are now in seperate folders under the lists-root folder for easier
+  management
++ added automatic generation of .htaccess file for lists-root folder
+* optimized functions (added add, remove members)
+* file entries are now identified by unique hashes
+* updated form.php, members.php and error.php
+* updated README
+
+---------------------------------
+Version 1.4 - Oct 05, 2010
+---------------------------------
+
++ created error.php
++ created style.css
+* using absolute path for the reason of optimization
+* form now retains data on error
+* fixed sending via BCC
+* updated README
+
+---------------------------------
+Version 1.3 - Oct 02, 2010
+---------------------------------
+
++ added captcha support for anti-spam protection
+* updated form
+* converted to class
+
+---------------------------------
+Version 1.2 - Sep 30, 2010
+---------------------------------
+
++ added swiftmailer for sending mails
++ added configuration library
++ removed domain from email in member list
++ list members are now BCC when sending mail
+* fixed warnings in form.php
+* updated layout of form.php
+* switched to plaintext email
+
+---------------------------------
+Version 1.1 - Sep 25, 2010
+---------------------------------
+
++ added authorization mechanism for joining a list
++ added members list
+* updated form.php
+
+---------------------------------
+Version 1.0 - Sep 22, 2010
+---------------------------------
+
++ initial release
