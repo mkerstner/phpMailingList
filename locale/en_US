@@ -1,0 +1,6 @@
+SendMessage = Send Message
+ShowMembers = Show Members
+ReloadImage = Reload Image
+EnterCAPTCHAResultHere = Please enter CAPTCHA result here.
+EnterCAPTCHAResultRight = "CAPTCHA Image - Please enter result on the right."
+InvalidCAPTCHA = Invalid CAPTCHA given, please try again.

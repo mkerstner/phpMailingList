@@ -9,10 +9,18 @@ Legend:
 ! Known issue / missing feature
 
 ---------------------------------
+Version 1.8.0 - Sep 17, 2012
+---------------------------------
+
++ added file attachments
++ added locale and translations for en_US and de_AT (more translations are welcome :) )
+
+---------------------------------
 Version 1.7.3 - Aug 18, 2012
 ---------------------------------
 
 + released on GitHub
+* minor code improvements
 
 ---------------------------------
 Version 1.7.2 - Jun 06, 2012

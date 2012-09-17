@@ -270,12 +270,14 @@ abstract class PhpMailingList {
      * @param string? $list current list selected
      * @param string? $email email currently entered
      * @param string? $message message currently entered
+     * @param string? $attachment
      * @param string? $userMessage message for the user
      * @param bool? $disabled whether the form is disabled or not
      * @see form.php
      * @see config.ini
      */
-    private static function printForm($list = null, $email = null, $message = null, $userMessage = null, $disabled = false) {
+    private static function printForm($list = null, $email = null, $message = null, $attachment = null, $userMessage = null, $disabled = false) {
+
         $formFilename = Config::get('form_file');
         $formFile = self::getListFolder($list) . $formFilename;
 
@@ -499,16 +501,20 @@ abstract class PhpMailingList {
      * Sends message to all recipients in list specified.
      * @param string $message
      * @param string $list
+     * @param array? $attachment
      * @return string? error message in case of error, otherwise NULL.
      */
-    private static function sendMessageToList($message, $list) {
+    private static function sendMessageToList($message, $list, $attachments = null) {
 
-        if (empty($message))
+        if (empty($message)) {
             throw new UserException('Failed to send message: No message specified.');
+        }
 
         $members = self::getMembers($list);
-        if (count($members) < 1)
+
+        if (count($members) < 1) {
             throw new UserException('List does not have any members.');
+        }
 
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
         $subject = 'Message from list "' . $list . '"';
@@ -523,7 +529,10 @@ abstract class PhpMailingList {
 
         try {
             Email::sendEmail($from, null, wordwrap($message .
-                            self::getFooter(true)), $subject, null, $recipients);
+                            self::getFooter(true)), $subject, $attachments, $recipients);
+
+            //TODO: remove files from tmp again            
+
             return NULL; //success
         } catch (Exception $e) {
             return 'Failed to send mail to list: ' . $e->getMessage();
@@ -540,14 +549,16 @@ abstract class PhpMailingList {
         $filepath = self::getMembersFilePath($list);
         $lines = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-        if ($lines === false)
+        if ($lines === false) {
             throw new Exception('Failed to open members file.');
+        }
 
         foreach ($lines as $line) {
             $member = explode(' : ', $line); //[0]=hash, [1]=email
 
-            if (count($member) < 2)
+            if (count($member) < 2) {
                 throw new Exception('Invalid syntax in members file.');
+            }
 
             //[0]=hash, [1]=email
             $members[] = array($member[0], self::removeEmailTags($member[1]));
@@ -558,20 +569,20 @@ abstract class PhpMailingList {
 
     /**
      * Processes action for list specified.
-     * @param string $action
-     * @param string $list
+     * @param string? $action
+     * @param string? $list
+     * @param string? $locale
      */
-    public static function processRequest($action = null, $list = null) {
-
+    public static function processRequest($action = null, $list = null, $locale = null) {
         $authHash = isset($_GET['auth']) ? $_GET['auth'] : null;
         $formEmail = isset($_POST['email']) ? mb_strtolower($_POST['email']) :
                 null;
         $formMessage = isset($_POST['message']) ? $_POST['message'] : null;
+        $formAttachment = isset($_POST['attachment']) ? $_POST['attachment'] : null;
         $replyToMsg = isset($_GET['replyToMsg']) ?
                 urldecode(mb_substr($_GET['replyToMsg'], 0, Config::get('max_reply_to_msg_length'))) : null;
 
         try {
-
             self::checkAuth($authHash); //check authentication on demand
             self::checkForList($list); //auto-initialize list
 
@@ -579,8 +590,7 @@ abstract class PhpMailingList {
 
             if ($action === 'subc') {
                 if ($securimage->check($_POST['captcha_code']) == false) {
-                    throw new UserException('Invalid CAPTCHA given, please ' .
-                            'try again.');
+                    throw new UserException('InvalidCAPTCHA');
                 }
 
                 self::subscribe($formEmail, $list);
@@ -593,8 +603,7 @@ abstract class PhpMailingList {
                         '</span>.');
             } else if ($action === 'unsubc') {
                 if ($securimage->check($_POST['captcha_code']) == false) {
-                    throw new UserException('Invalid CAPTCHA given, please ' .
-                            'try again.');
+                    throw new UserException('InvalidCAPTCHA');
                 }
 
                 self::unsubscribe($formEmail, $list);
@@ -602,20 +611,48 @@ abstract class PhpMailingList {
                         '<span style="font-weight:bold;">' . $formEmail .
                         '</span><br/>has been removed from our mailing list.');
             } else if ($action === 'sendmsgc') {
-                if ($securimage->check($_POST['captcha_code']) == false)
-                    throw new UserException('Invalid CAPTCHA given, please try again.');
+                if ($securimage->check($_POST['captcha_code']) == false) {
+                    throw new UserException('InvalidCAPTCHA');
+                }
 
-                $sendResult = self::sendMessageToList($formMessage, $list);
+                $formAttachments = array();
+
+                if (isset($_FILES['attachments'])) {
+                    $uploaddir = realpath(PHPMAILINGLIST_BASEPATH . Config::get('tmp_folder'));
+                    $attachmentCount = count($_FILES['attachments']['name']);
+
+                    for ($i = 0; $i < $attachmentCount; $i++) {
+                        if (empty($_FILES['attachments']['name'][$i])) {
+                            continue;
+                        }
+
+                        if ($_FILES['attachments']['error'][$i] || !$_FILES['attachments']['size'][$i]) {
+                            //echo 'ignoring file ' . $_FILES['attachments']['name'][$i];
+                            continue;
+                        }
+
+                        $uploadfile = $uploaddir . basename($_FILES['attachments']['name'][$i]);
+
+                        if (!move_uploaded_file($_FILES['attachments']['tmp_name'][$i], $uploadfile)) {
+                            //echo 'ignoring file ' . $_FILES['attachments']['name'][$i];
+                            continue;
+                        } else {
+                            $formAttachments[] = $uploadfile;
+                        }
+                    }
+                }
+
+                $sendResult = self::sendMessageToList($formMessage, $list, $formAttachments);
 
                 if ($sendResult === null) { //success
                     self::printForm($list, null, null, 'Successfully sent message to members of list.');
                 } else { //display error
-                    self::printForm($list, $formEmail, $formMessage, $sendResult);
+                    self::printForm($list, $formEmail, $formMessage, $formAttachment, $sendResult);
                 }
             } else if ($action === 'authsubc') {
                 $hash = isset($_GET['hash']) ? mb_strtolower($_GET['hash']) : null;
                 self::subscribeAuthorize($hash, $list);
-                self::printForm($list, null, null, 'Your email has been successfully authorized!<br/>' .
+                self::printForm($list, null, null, null, 'Your email has been successfully authorized!<br/>' .
                         'You have now joined the mailing list<br/>' .
                         '<span style="font-weight:bold;">' . $list .
                         '</span><br/>Feel free to send messages or ' .
@@ -626,7 +663,7 @@ abstract class PhpMailingList {
                 self::printForm($list, $formEmail, $replyToMsg);
             }
         } catch (UserException $e) {
-            self::printForm($list, $formEmail, $formMessage, $e->getMessage());
+            self::printForm($list, $formEmail, $formMessage, $formAttachment, $e->getMessage());
         } catch (Exception $e) {
             self::printError($e->getMessage());
         }

@@ -1,0 +1,12 @@
+Membership = Mitgliedschaft
+SendMessage = Nachricht verschicken
+Message = Nachricht
+Attachments = Anhänge
+ReloadImage = Bild neu laden
+Subscribe = Anmelden
+Unsubscribe = Abmelden
+Submit = Senden
+ShowMembers = Mitglieder anzeigen
+EnterCAPTCHAResultHere = Bitte geben Sie hier den Inhalt des CAPTCHA Bildes ein.
+EnterCAPTCHAResultRight = "CAPTCHA Bild - Bitte geben Sie den Inhalt des Bildes auf der rechten Seite ein."
+InvalidCAPTCHA = Ungültiger CAPTCHA Wert angegeben

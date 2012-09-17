@@ -121,8 +121,9 @@ abstract class Email {
             $bccChecked = !empty($bcc) ? self::verifyAndSplitEmail(explode(
                                     EMAIL_LIST_SEPERATOR, $bcc)) : array();
 
-            if (count($recipients) < 1 && count($bccChecked) < 1)
+            if (count($recipients) < 1 && count($bccChecked) < 1) {
                 throw new Exception('No valid email specified.');
+            }
 
             $mailerTransport = Swift_SmtpTransport::newInstance(
                             Config::get('email_smtp_server'), Config::get('email_smtp_port'));

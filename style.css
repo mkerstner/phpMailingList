@@ -1,6 +1,11 @@
-body {
+html {
     font-family: Verdana;
     font-size: 10pt;
+    color: #000;
+}
+body {
+    font-family: Verdana;
+    font-size: 8pt;
     color: #000;
 }
 h1 {
@@ -19,7 +24,7 @@ div.error {
 }
 div.outerContainer {
     text-align: center;
-    padding-top: 50px;
+    padding-top: 20px;
 }
 div.sectionOuter {
     width: 500px;
@@ -78,4 +83,17 @@ textarea {
 }
 .highlight {
     color: orange;
+}
+
+.ui-accordion-header a {
+    background-color: orange;
+    font-weight: bold;
+}
+.ui-accordion .ui-accordion-content {
+    margin-bottom: 0;
+    margin-top: -1px;
+    top: 0px;
+}
+.ui-widget-content {
+    background: inherit;
 }

@@ -29,7 +29,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 define('PHPMAILINGLIST_DIRSEPERATOR', '/');
-define('PHPMAILINGLIST_BASEPATH', mb_ereg_replace('/\\/g', PHPMAILINGLIST_DIRSEPERATOR, dirname(realpath(__FILE__))) . PHPMAILINGLIST_DIRSEPERATOR);
+define('PHPMAILINGLIST_BASEPATH', mb_ereg_replace('/\\/g', PHPMAILINGLIST_DIRSEPERATOR, dirname(realpath(__FILE__)))
+        . PHPMAILINGLIST_DIRSEPERATOR);
 
 require_once PHPMAILINGLIST_BASEPATH . 'PhpMailingList.php';
 
