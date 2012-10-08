@@ -48,7 +48,7 @@ abstract class Email {
 
         $emailList = is_array($email) ? $email : array($email);
         $filteredEmailList = array();
-
+        
         foreach ($emailList as $v) {
 
             if (trim($v) === '') {

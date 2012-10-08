@@ -10,3 +10,5 @@ ShowMembers = Mitglieder anzeigen
 EnterCAPTCHAResultHere = Bitte geben Sie hier den Inhalt des CAPTCHA Bildes ein.
 EnterCAPTCHAResultRight = "CAPTCHA Bild - Bitte geben Sie den Inhalt des Bildes auf der rechten Seite ein."
 InvalidCAPTCHA = Ungültiger CAPTCHA Wert angegeben
+ReplyToLink = Um zu antworten bitte den folgenden Link verwenden
+MessageFromList = Nachricht der Liste

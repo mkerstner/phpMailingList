@@ -40,7 +40,7 @@ $img = new securimage();
 
 $img->image_width = 100;
 $img->image_height = 50;
-$img->perturbation = 0.4; // 1.0 = high distortion, higher numbers = more distortion
+$img->perturbation = 0.2; // 1.0 = high distortion, higher numbers = more distortion
 //$img->image_bg_color = new Securimage_Color("#0099CC");
 $img->text_color = new Securimage_Color("#000");
 $img->text_transparency_percentage = 60; // 100 = completely transparent

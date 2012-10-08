@@ -29,6 +29,11 @@ abstract class Config {
     private static $translation_ = null;
 
     /**
+     * @var <string> locale
+     */
+    private static $locale_ = null;
+
+    /**
      * Sets PHP's level for displaying errors based on current AVW_STAGE.
      */
     private static function setDisplayErrors() {
@@ -58,11 +63,12 @@ abstract class Config {
      * sets translation labels 
      */
     private static function setLocale() {
-        $_locale = isset($_GET['locale']) ? $_GET['locale'] : self::get('default_locale');
+        self::$locale_ = isset($_GET['locale']) && $_GET['locale'] !== '' ?
+                $_GET['locale'] : self::get('default_locale');
         $localeFileBasePath = PHPMAILINGLIST_BASEPATH . PHPMAILINGLIST_DIRSEPERATOR
                 . 'locale' . PHPMAILINGLIST_DIRSEPERATOR;
         $localeFilePath = realpath($localeFileBasePath
-                . basename(mb_strtolower($_locale)));
+                . basename(mb_strtolower(self::$locale_)));
 
         if (!$localeFilePath) {
             $defaultLocale = realpath($localeFileBasePath
@@ -72,7 +78,7 @@ abstract class Config {
             }
         }
 
-        if (!file_exists($localeFilePath)) {
+        if (!file_exists($localeFilePath) || !is_file($localeFilePath)) {
             throw new ConfigurationException('No translation file exists.');
         }
 
@@ -85,6 +91,10 @@ abstract class Config {
         if (self::$translation_ === false) {
             throw new ConfigurationException('Failed to load translation file.');
         }
+    }
+
+    public static function getLocale() {
+        return self::$locale_;
     }
 
     /**

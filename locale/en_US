@@ -4,3 +4,5 @@ ReloadImage = Reload Image
 EnterCAPTCHAResultHere = Please enter CAPTCHA result here.
 EnterCAPTCHAResultRight = "CAPTCHA Image - Please enter result on the right."
 InvalidCAPTCHA = Invalid CAPTCHA given, please try again.
+ReplyToLink = In order to reply to this message please go to
+MessageFromList = Message from list

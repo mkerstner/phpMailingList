@@ -272,14 +272,16 @@ abstract class PhpMailingList {
      * @param string? $message message currently entered
      * @param string? $attachment
      * @param string? $userMessage message for the user
-     * @param bool? $disabled whether the form is disabled or not
+     * @param bool? $disabled whether the form is disabled
+     * @param string? $formModule which form module (admin|send) to be 
+     *                displayed, possible values are 'admin' and 'send'.
      * @see form.php
      * @see config.ini
      */
-    private static function printForm($list = null, $email = null, $message = null, $attachment = null, $userMessage = null, $disabled = false) {
-
+    private static function printForm($list = null, $email = null, $message = null, $attachment = null, $userMessage = null, $disabled = false, $formModule = 'send') {
         $formFilename = Config::get('form_file');
         $formFile = self::getListFolder($list) . $formFilename;
+        $formModule = (!in_array($formModule, array('admin', 'send')) || !$formModule) ? 'send' : $formModule;
 
         if (!empty($formFilename) && file_exists($formFile)) {
             require_once $formFile; //customized file exists
@@ -385,7 +387,7 @@ abstract class PhpMailingList {
                 "link:\n\n" . $authUrl . "\n\n" .
                 "If you think that you have received this email in error please " .
                 "just ignore it.";
-
+        
         Email::sendEmail($from, $email, wordwrap($message . self::getFooter(true)), $subject); //send authorization request to email
 
         self::notifyAdmin($list, $email . ' is pending authorization for list ' .
@@ -517,8 +519,10 @@ abstract class PhpMailingList {
         }
 
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
-        $subject = 'Message from list "' . $list . '"';
-        $message .= "\n\n**In order to reply to this message please go to:\n\n" .
+        $subject = Config::__('MessageFromList')
+                . '"' . $list . '"';
+        $message .= "\n\n**" . Config::__('ReplyToLink') .
+                ":\n\n" .
                 self::getCurrentUrl(true) . '?list=' . $list;
         $recipients = '';
 
@@ -581,6 +585,7 @@ abstract class PhpMailingList {
         $formAttachment = isset($_POST['attachment']) ? $_POST['attachment'] : null;
         $replyToMsg = isset($_GET['replyToMsg']) ?
                 urldecode(mb_substr($_GET['replyToMsg'], 0, Config::get('max_reply_to_msg_length'))) : null;
+        $formModule = isset($_GET['showModule']) ? $_GET['showModule'] : null;
 
         try {
             self::checkAuth($authHash); //check authentication on demand
@@ -594,22 +599,22 @@ abstract class PhpMailingList {
                 }
 
                 self::subscribe($formEmail, $list);
-                self::printForm($list, null, null, 'An authorization request has been sent to<br/>' .
+                self::printForm($list, null, null, null, 'An authorization request has been sent to<br/>' .
                         '<span style="font-weight:bold;">' . $formEmail .
                         '</span>.<br/>Please follow the instructions ' .
                         'in the mail<br/>in order to complete your' .
                         '<br/>subscription to the mailing list<br/>' .
                         '<span style="font-weight:bold;">' . $list .
-                        '</span>.');
+                        '</span>.', false, $formModule);
             } else if ($action === 'unsubc') {
                 if ($securimage->check($_POST['captcha_code']) == false) {
                     throw new UserException('InvalidCAPTCHA');
                 }
 
                 self::unsubscribe($formEmail, $list);
-                self::printForm($list, null, null, 'Your email<br/>' .
+                self::printForm($list, null, null, null, 'Your email<br/>' .
                         '<span style="font-weight:bold;">' . $formEmail .
-                        '</span><br/>has been removed from our mailing list.');
+                        '</span><br/>has been removed from our mailing list.', false, $formModule);
             } else if ($action === 'sendmsgc') {
                 if ($securimage->check($_POST['captcha_code']) == false) {
                     throw new UserException('InvalidCAPTCHA');
@@ -645,9 +650,9 @@ abstract class PhpMailingList {
                 $sendResult = self::sendMessageToList($formMessage, $list, $formAttachments);
 
                 if ($sendResult === null) { //success
-                    self::printForm($list, null, null, 'Successfully sent message to members of list.');
+                    self::printForm($list, null, null, null, 'Successfully sent message to members of list.', false, $formModule);
                 } else { //display error
-                    self::printForm($list, $formEmail, $formMessage, $formAttachment, $sendResult);
+                    self::printForm($list, $formEmail, $formMessage, $formAttachment, $sendResult, false, $formModule);
                 }
             } else if ($action === 'authsubc') {
                 $hash = isset($_GET['hash']) ? mb_strtolower($_GET['hash']) : null;
@@ -656,14 +661,14 @@ abstract class PhpMailingList {
                         'You have now joined the mailing list<br/>' .
                         '<span style="font-weight:bold;">' . $list .
                         '</span><br/>Feel free to send messages or ' .
-                        'administrate your account. Enjoy!');
+                        'administrate your account. Enjoy!', false, $formModule);
             } else if ($action === 'showmembers') {
                 self::printMembers($list);
             } else {
-                self::printForm($list, $formEmail, $replyToMsg);
+                self::printForm($list, $formEmail, $replyToMsg, null, null, false, $formModule);
             }
         } catch (UserException $e) {
-            self::printForm($list, $formEmail, $formMessage, $formAttachment, $e->getMessage());
+            self::printForm($list, $formEmail, $formMessage, $formAttachment, $e->getMessage(), false, $formModule);
         } catch (Exception $e) {
             self::printError($e->getMessage());
         }

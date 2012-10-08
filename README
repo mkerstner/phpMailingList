@@ -48,3 +48,10 @@ phpMailingList provides the following core functionality:
 In order to prevent SPAM messages a CAPTCHA field has to be filled out prior to
 any of the action provided by form.php, i.e. subscribe, unsubscribe and send
 messages.
+
+4.) FURTHER INFORMATION
+--------------------------
+
+In case you receive a "Failed to send mail" message with an empty recipient 
+email make sure that the email corresponds to a correctly configured and 
+available domain. phpMailingList checks for valid domains via MX lookup.

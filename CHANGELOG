@@ -8,6 +8,17 @@ Legend:
 - Bug fixed
 ! Known issue / missing feature
 
+
+---------------------------------
+Version 1.8.1 - Oct 09, 2012
+---------------------------------
+
++ added language switcher links in form.php
+* improved translations
+* improved form styling
+* lowered default perturbation for CAPTCHAs in form
+- fixed wrong argument counts in printForm
+
 ---------------------------------
 Version 1.8.0 - Sep 17, 2012
 ---------------------------------
