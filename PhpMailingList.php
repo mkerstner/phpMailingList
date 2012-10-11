@@ -520,7 +520,7 @@ abstract class PhpMailingList {
 
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
         $subject = Config::__('MessageFromList')
-                . '"' . $list . '"';
+                . ' "' . $list . '"';
         $message .= "\n\n**" . Config::__('ReplyToLink') .
                 ":\n\n" .
                 self::getCurrentUrl(true) . '?list=' . $list;

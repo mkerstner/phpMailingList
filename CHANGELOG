@@ -10,10 +10,18 @@ Legend:
 
 
 ---------------------------------
+Version 1.8.2 - Oct 11, 2012
+---------------------------------
+
++ added support to display correct context (admin|send)
+* improved translations
+* improved form styling
+
+---------------------------------
 Version 1.8.1 - Oct 09, 2012
 ---------------------------------
 
-+ added language switcher links in form.php
++ added language switcher in form.php
 * improved translations
 * improved form styling
 * lowered default perturbation for CAPTCHAs in form

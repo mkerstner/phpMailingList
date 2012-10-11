@@ -2,6 +2,7 @@
 1.9
 - remove attachments from tmp folder after mail was sent
 - list password
+- improve/add translations
 
 2.0
 - implement reference code to reply to messages directly

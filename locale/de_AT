@@ -1,4 +1,4 @@
-Membership = Mitgliedschaft
+﻿Membership = Mitgliedschaft
 SendMessage = Nachricht verschicken
 Message = Nachricht
 Attachments = Anhänge
@@ -12,3 +12,4 @@ EnterCAPTCHAResultRight = "CAPTCHA Bild - Bitte geben Sie den Inhalt des Bildes 
 InvalidCAPTCHA = Ungültiger CAPTCHA Wert angegeben
 ReplyToLink = Um zu antworten bitte den folgenden Link verwenden
 MessageFromList = Nachricht der Liste
+MailingList = Mailing Liste
