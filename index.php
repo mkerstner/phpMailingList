@@ -45,11 +45,11 @@ try {
     header('Content-type: text/html; charset=utf-8');
     PhpMailingList::processRequest($action, $list);
 } catch (Exception $e) {
-
     //try to write to log file
     @file_put_contents(PHPMAILINGLIST_BASEPATH .
                     Config::get('log_file'), $e->getMessage() . "\n", FILE_APPEND);
 
-    die('Sorry, your request could not be processed.');
+    //there's nothing more we can do, good bye...
+    die('Sorry, your request could not be processed. Please check your log file.');
 }
 ?>

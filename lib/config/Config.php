@@ -7,14 +7,14 @@
  * @link http://www.kerstner.at/phpmailinglist
  *
  * @filesource Config.php
- * @author Matthias Kerstner <matthias@kerstner.at>
+ **@author Matthias Kerstner <matthias@kerstner.at>
  */
 require_once 'lib/config/ConfigurationException.php';
 
 /**
  * Config
  *
- * @author Matthias Kerstner <matthias@kerstner.at>
+ **@author Matthias Kerstner <matthias@kerstner.at>
  */
 abstract class Config {
 

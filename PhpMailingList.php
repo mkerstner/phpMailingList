@@ -78,10 +78,10 @@ abstract class PhpMailingList {
             throw new Exception('Failed to create htaccess file.');
         }
 
-        fclose($membersHandle);
-        fclose($authHandle);
-        fclose($unauthHandle);
-        fclose($htaccessHandle);
+        @fclose($membersHandle);
+        @fclose($authHandle);
+        @fclose($unauthHandle);
+        @fclose($htaccessHandle);
     }
 
     /**
@@ -119,8 +119,9 @@ abstract class PhpMailingList {
             }
         }
 
-        if ($memberEmail !== null)
+        if ($memberEmail !== null) {
             return $memberEmail;
+        }
 
         throw new Exception('Invalid authentication.');
     }
@@ -133,14 +134,16 @@ abstract class PhpMailingList {
      */
     private static function addMember($list, $email, $authHash) {
         $handle = fopen(self::getMembersFilePath($list), 'ab');
-        if (!$handle)
+
+        if (!$handle) {
             throw new Exception('Failed to open members file.');
+        }
         if (fputs($handle, "\n<$authHash> : <$email>") === false) {
             throw new Exception('Failed to subscribe. Could not write ' .
                     'to list file.');
         }
 
-        fclose($handle);
+        @fclose($handle);
     }
 
     /**
@@ -151,24 +154,27 @@ abstract class PhpMailingList {
     private static function removeMember($list, $email) {
         $filename = self::getMembersFilePath($list);
         $handle = fopen($filename, 'ab+');
-        if (!$handle)
+        if (!$handle) {
             throw new Exception('Failed to open list file.');
+        }
 
         $membersData = fread($handle, filesize($filename) + 1);
-        fclose($handle);
+        @fclose($handle);
 
-        if (!$membersData)
+        if (!$membersData) {
             throw new Exception('Failed to read members data.');
+        }
 
         $membersData = preg_replace("/\n<[^>]+> : <$email>/", '', $membersData);
 
         $handle = fopen($filename, 'wb');
-        if (!$handle)
+        if (!$handle) {
             throw new Exception('Failed to open list file.');
+        }
         if (fputs($handle, $membersData) === false)
             throw new Exception('Failed to write to list file.');
 
-        fclose($handle);
+        @fclose($handle);
     }
 
     /**
@@ -252,14 +258,18 @@ abstract class PhpMailingList {
                 $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
 
         $urlParts = parse_url($url);
-        if (!$urlParts)
+
+        if (!$urlParts) {
             throw new Exception('Failed to parse url.');
+        }
 
         $baseUrl = ($urlParts['scheme'] . '://' . $urlParts['host'] .
                 $urlParts['path']);
 
-        if ($baseUrlOnly)
+        if ($baseUrlOnly) {
             return $baseUrl;
+        }
+
         return ($baseUrl . $urlParts['query']);
     }
 
@@ -374,7 +384,7 @@ abstract class PhpMailingList {
             throw new Exception('Failed to subscribe. Could not write to ' .
                     'authorization file.');
         }
-        fclose($authorizationHandle);
+        @fclose($authorizationHandle);
 
         $authUrl = self::getCurrentUrl(true) . '?list=' . $list .
                 '&action=authsubc&hash=' . $hash;
@@ -387,7 +397,7 @@ abstract class PhpMailingList {
                 "link:\n\n" . $authUrl . "\n\n" .
                 "If you think that you have received this email in error please " .
                 "just ignore it.";
-        
+
         Email::sendEmail($from, $email, wordwrap($message . self::getFooter(true)), $subject); //send authorization request to email
 
         self::notifyAdmin($list, $email . ' is pending authorization for list ' .
@@ -415,7 +425,7 @@ abstract class PhpMailingList {
                     'required file(s).');
         }
         $authorizationFileContent = fread($authorizationHandle, filesize($authorizationFile) + 1);
-        fclose($authorizationHandle);
+        @fclose($authorizationHandle);
 
         if ($authorizationFileContent === false) {
             throw new Exception('Failed to subscribe: Could not read ' .
@@ -428,21 +438,24 @@ abstract class PhpMailingList {
 
         $regexp = "/\n<($hash)> : <([^>]+)>/";
         $matches = null; // [0] = chunk, [1] = hash, [2] = email
-        if (!preg_match($regexp, $authorizationFileContent, $matches))
+        
+        if (!preg_match($regexp, $authorizationFileContent, $matches)) {
             throw new Exception('Failed to read data from authorization file.');
+        }
 
         $email = $matches[2];
         $authorizationFileContent = preg_replace($regexp, '', $authorizationFileContent); //remove email
 
         $authorizationHandle = fopen($authorizationFile, 'wb');
-        if (!$authorizationHandle)
+        if (!$authorizationHandle) {
             throw new Exception('Failed to open authorization file.');
+        }
         if (fputs($authorizationHandle, $authorizationFileContent) === false) {
             throw new Exception('Failed to authorize subscription: ' .
                     'Could not write to authorization file.');
         }
 
-        fclose($authorizationHandle);
+        @fclose($authorizationHandle);
 
         $authHash = md5($email . (string) time() . (string) rand(1, 256));
         self::addMember($list, $email, $authHash); //add member to list
@@ -470,7 +483,6 @@ abstract class PhpMailingList {
      * @param string $list
      */
     private static function unsubscribe($email, $list) {
-
         try {
             Email::verifyAndSplitEmail($email);
         } catch (Exception $e) {
@@ -478,8 +490,9 @@ abstract class PhpMailingList {
                     $e->getMessage());
         }
 
-        if (!self::isMember($list, $email))
+        if (!self::isMember($list, $email)) {
             throw new UserException('Email is not subscribed to this mailing list.');
+        }
 
         self::removeMember($list, $email);
 

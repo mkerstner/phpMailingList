@@ -12,9 +12,12 @@
 
 1.) Edit config.ini to your needs, make sure to specify a valid email for 
     "email_reply_to".
-2.) Edit form.php, members.php and error.php to your needs.
+
+2.) Customize form.php, members.php and error.php to your needs.
+
 3.) Be sure to set correct permissions for the lists- and tmp-directory set in
     config.ini.
+
 4.) Test your installation by creating a list, e.g.:
 
     lists/mylist/
