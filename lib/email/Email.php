@@ -2,7 +2,7 @@
 
 /**
  * @filesource Email.php
- **@author Matthias Kerstner <matthias@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
  * @copyright Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
@@ -179,5 +179,3 @@ abstract class Email {
     }
 
 }
-
-?>

@@ -7,14 +7,14 @@
  * @link http://www.kerstner.at/phpmailinglist
  *
  * @filesource Config.php
- **@author Matthias Kerstner <matthias@kerstner.at>
+ * *@author Matthias Kerstner <matthias@kerstner.at>
  */
 require_once 'lib/config/ConfigurationException.php';
 
 /**
  * Config
  *
- **@author Matthias Kerstner <matthias@kerstner.at>
+ * *@author Matthias Kerstner <matthias@kerstner.at>
  */
 abstract class Config {
 
@@ -65,7 +65,8 @@ abstract class Config {
     private static function setLocale() {
         self::$locale_ = isset($_GET['locale']) && $_GET['locale'] !== '' ?
                 $_GET['locale'] : self::get('default_locale');
-        $localeFileBasePath = PHPMAILINGLIST_BASEPATH . PHPMAILINGLIST_DIRSEPERATOR
+
+        $localeFileBasePath = PHPMAILINGLIST_BASEPATH
                 . 'locale' . PHPMAILINGLIST_DIRSEPERATOR;
         $localeFilePath = realpath($localeFileBasePath
                 . basename(mb_strtolower(self::$locale_)));
@@ -144,7 +145,7 @@ abstract class Config {
         }
 
         throw new ConfigurationException('No such configuration label ' .
-                $configLabel);
+        $configLabel);
     }
 
     /**
@@ -166,5 +167,3 @@ abstract class Config {
     }
 
 }
-
-?>

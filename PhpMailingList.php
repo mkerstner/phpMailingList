@@ -36,6 +36,46 @@ require_once PHPMAILINGLIST_BASEPATH . 'UserException.php';
 abstract class PhpMailingList {
 
     /**
+     * 
+     * @param string $list
+     * @param string $msgId
+     * @return string
+     * @throws Exception
+     */
+    private static function loadMessage($list, $msgId) {
+
+        $startRegexp = "____START____" . $msgId . "____";
+        $endRegexp = "____END____" . $msgId . "____";
+        $filepath = self::getMessagesFilePath($list);
+        $lines = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        if ($lines === false) {
+            throw new Exception('Failed to open members file.');
+        }
+
+        $message = null;
+
+        foreach ($lines as $line) {
+            if ($line == $startRegexp) {
+                $message = ""; // init message for next iteration
+                continue;
+            }
+            if ($line == $endRegexp) {
+                return $message; // we are done
+            }
+            if ($message !== null) {
+                $message .= $line; // append line of current message
+            }
+        }
+
+        if ($message === null) {
+            throw new Exception('So such message exists');
+        }
+
+        return preg_replace("/\\n/", "\r\n", $message);
+    }
+
+    /**
      *
      * @param string? $authHash
      * @return string? email of authenticated user
@@ -43,8 +83,8 @@ abstract class PhpMailingList {
     private static function checkAuth($authHash = null) {
         if (Config::get('require_authentication') != '') {
             throw new Exception('Failed to authenticate.' .
-                    '<br/>Please use the link provided in the initial ' .
-                    'subscription mail.');
+            '<br/>Please use the link provided in the initial ' .
+            'subscription mail.');
         }
     }
 
@@ -59,12 +99,13 @@ abstract class PhpMailingList {
             throw new Exception('No list specified.');
         } else if (!file_exists(self::getListFolder($list))) {
             throw new Exception('List<br/><span style="font-weight:bold;">' .
-                    $list . '</span><br/>does not exist.');
+            $list . '</span><br/>does not exist.');
         }
 
         $membersHandle = fopen(self::getMembersFilePath($list), 'ab+');
         $authHandle = fopen(self::getSubscribeAuthorizationFilePath($list), 'ab+');
         $unauthHandle = fopen(self::getUnsubscribeAuthorizationFilePath($list), 'ab+');
+        $messagesHandle = fopen(self::getMessagesFilePath($list), 'ab+');
         $htaccessHandle = fopen(PHPMAILINGLIST_BASEPATH .
                 Config::get('lists_folder') . '.htaccess', 'ab+');
 
@@ -78,10 +119,11 @@ abstract class PhpMailingList {
             throw new Exception('Failed to create htaccess file.');
         }
 
-        @fclose($membersHandle);
-        @fclose($authHandle);
-        @fclose($unauthHandle);
-        @fclose($htaccessHandle);
+        fclose($membersHandle);
+        fclose($authHandle);
+        fclose($unauthHandle);
+        fclose($messagesHandle);
+        fclose($htaccessHandle);
     }
 
     /**
@@ -94,8 +136,9 @@ abstract class PhpMailingList {
         $members = self::getMembers($list);
 
         foreach ($members as $member) {
-            if ($email === $member[1])
+            if ($email === $member[1]) {
                 return true;
+            }
         }
 
         return false;
@@ -140,10 +183,10 @@ abstract class PhpMailingList {
         }
         if (fputs($handle, "\n<$authHash> : <$email>") === false) {
             throw new Exception('Failed to subscribe. Could not write ' .
-                    'to list file.');
+            'to list file.');
         }
 
-        @fclose($handle);
+        fclose($handle);
     }
 
     /**
@@ -159,7 +202,7 @@ abstract class PhpMailingList {
         }
 
         $membersData = fread($handle, filesize($filename) + 1);
-        @fclose($handle);
+        fclose($handle);
 
         if (!$membersData) {
             throw new Exception('Failed to read members data.');
@@ -174,7 +217,32 @@ abstract class PhpMailingList {
         if (fputs($handle, $membersData) === false)
             throw new Exception('Failed to write to list file.');
 
-        @fclose($handle);
+        fclose($handle);
+    }
+
+    /**
+     * 
+     * @param type $list
+     * @param type $message
+     * @param type $msgId
+     * @throws Exception
+     */
+    private static function addMessage($list, $message, $msgId) {
+        $handle = fopen(self::getMessagesFilePath($list), 'ab');
+
+        if (!$handle) {
+            throw new Exception('Failed to open messages file.');
+        }
+
+        $messageContent = "____START____" . $msgId . "____\n" . $message .
+                "\n____END____" . $msgId . "____";
+
+        if (fputs($handle, "\n" . $messageContent) === false) {
+            throw new Exception('Failed to write message ' .
+            'to file.');
+        }
+
+        fclose($handle);
     }
 
     /**
@@ -238,6 +306,16 @@ abstract class PhpMailingList {
     }
 
     /**
+     * Returns path to messages file..
+     * @param string $list
+     * @return string
+     */
+    private static function getMessagesFilePath($list) {
+        return (self::getListFolder($list) . Config::get('rand_prefix') .
+                'messages');
+    }
+
+    /**
      * Returns footer to be attached to messages.
      * @param bool? $plainText
      * @return string
@@ -281,6 +359,7 @@ abstract class PhpMailingList {
      * @param string? $email email currently entered
      * @param string? $message message currently entered
      * @param string? $attachment
+     * @param string? $replyToMsgId message ID to be pre-loaded in form
      * @param string? $userMessage message for the user
      * @param bool? $disabled whether the form is disabled
      * @param string? $formModule which form module (admin|send) to be 
@@ -288,10 +367,14 @@ abstract class PhpMailingList {
      * @see form.php
      * @see config.ini
      */
-    private static function printForm($list = null, $email = null, $message = null, $attachment = null, $userMessage = null, $disabled = false, $formModule = 'send') {
+    private static function printForm($list = null, $email = null, $message = null, $attachment = null, $replyToMsgId = null, $userMessage = null, $disabled = false, $formModule = 'send') {
         $formFilename = Config::get('form_file');
         $formFile = self::getListFolder($list) . $formFilename;
         $formModule = (!in_array($formModule, array('admin', 'send')) || !$formModule) ? 'send' : $formModule;
+
+        if (!empty($replyToMsgId)) {
+            $message = self::loadMessage($list, $replyToMsgId); // overwrite possible $message specified
+        }
 
         if (!empty($formFilename) && file_exists($formFile)) {
             require_once $formFile; //customized file exists
@@ -358,31 +441,31 @@ abstract class PhpMailingList {
 
         if (self::isMember($list, $email)) {
             throw new UserException('Email is already included in this ' .
-                    'mailing list.');
+            'mailing list.');
         }
 
         $authorizationFile = self::getSubscribeAuthorizationFilePath($list);
         $authorizationHandle = fopen($authorizationFile, 'ab+');
         if (!$authorizationHandle) {
             throw new Exception('Failed to subscribe: Could not open ' .
-                    'required file(s).');
+            'required file(s).');
         }
 
         $authorizationFileContent = fread($authorizationHandle, filesize($authorizationFile) + 1);
         if ($authorizationFileContent === false) {
             throw new Exception('Failed to subscribe: Could not read ' .
-                    'authorization file.');
+            'authorization file.');
         }
         if (mb_strpos($authorizationFileContent, "<$email>") !== false) {
             throw new UserException('Email is already pending authorization ' .
-                    'for subscription.');
+            'for subscription.');
         }
 
         $hash = md5($email . (string) time() . (string) rand(1, 256));
 
         if (fputs($authorizationHandle, "\n<$hash> : <$email>") === false) {
             throw new Exception('Failed to subscribe. Could not write to ' .
-                    'authorization file.');
+            'authorization file.');
         }
         @fclose($authorizationHandle);
 
@@ -414,7 +497,7 @@ abstract class PhpMailingList {
 
         if (empty($hash)) {
             throw new Exception('Failed to authorize subscription: ' .
-                    'Invalid hash specified.');
+            'Invalid hash specified.');
         }
 
         // check for entry to auth-file and remove if it exists
@@ -422,23 +505,23 @@ abstract class PhpMailingList {
         $authorizationHandle = fopen($authorizationFile, 'ab+');
         if (!$authorizationHandle) {
             throw new Exception('Failed to subscribe: Could not open ' .
-                    'required file(s).');
+            'required file(s).');
         }
         $authorizationFileContent = fread($authorizationHandle, filesize($authorizationFile) + 1);
         @fclose($authorizationHandle);
 
         if ($authorizationFileContent === false) {
             throw new Exception('Failed to subscribe: Could not read ' .
-                    'authorization file.');
+            'authorization file.');
         }
         if (mb_strpos($authorizationFileContent, "<$hash>") === false) {
             throw new UserException('Email is not pending subscription ' .
-                    'authorization.');
+            'authorization.');
         }
 
         $regexp = "/\n<($hash)> : <([^>]+)>/";
         $matches = null; // [0] = chunk, [1] = hash, [2] = email
-        
+
         if (!preg_match($regexp, $authorizationFileContent, $matches)) {
             throw new Exception('Failed to read data from authorization file.');
         }
@@ -452,7 +535,7 @@ abstract class PhpMailingList {
         }
         if (fputs($authorizationHandle, $authorizationFileContent) === false) {
             throw new Exception('Failed to authorize subscription: ' .
-                    'Could not write to authorization file.');
+            'Could not write to authorization file.');
         }
 
         @fclose($authorizationHandle);
@@ -487,7 +570,7 @@ abstract class PhpMailingList {
             Email::verifyAndSplitEmail($email);
         } catch (Exception $e) {
             throw new UserException('Failed to unsubscribe: ' .
-                    $e->getMessage());
+            $e->getMessage());
         }
 
         if (!self::isMember($list, $email)) {
@@ -534,9 +617,12 @@ abstract class PhpMailingList {
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
         $subject = Config::__('MessageFromList')
                 . ' "' . $list . '"';
+        $messageOriginal = $message;
         $message .= "\n\n**" . Config::__('ReplyToLink') .
                 ":\n\n" .
                 self::getCurrentUrl(true) . '?list=' . $list;
+        $messageId = hash('sha256', $from . rand(10000, 999999) . $subject . $message . time());
+        $message .= '&msgId=' . $messageId;
         $recipients = '';
 
         foreach ($members as $member) {
@@ -549,6 +635,8 @@ abstract class PhpMailingList {
                             self::getFooter(true)), $subject, $attachments, $recipients);
 
             //TODO: remove files from tmp again            
+
+            self::addMessage($list, $messageOriginal, $messageId);
 
             return NULL; //success
         } catch (Exception $e) {
@@ -596,8 +684,7 @@ abstract class PhpMailingList {
                 null;
         $formMessage = isset($_POST['message']) ? $_POST['message'] : null;
         $formAttachment = isset($_POST['attachment']) ? $_POST['attachment'] : null;
-        $replyToMsg = isset($_GET['replyToMsg']) ?
-                urldecode(mb_substr($_GET['replyToMsg'], 0, Config::get('max_reply_to_msg_length'))) : null;
+        $replyToMsgId = isset($_GET['msgId']) ? urldecode($_GET['msgId']) : null;
         $formModule = isset($_GET['showModule']) ? $_GET['showModule'] : null;
 
         try {
@@ -612,7 +699,7 @@ abstract class PhpMailingList {
                 }
 
                 self::subscribe($formEmail, $list);
-                self::printForm($list, null, null, null, 'An authorization request has been sent to<br/>' .
+                self::printForm($list, null, null, null, null, 'An authorization request has been sent to<br/>' .
                         '<span style="font-weight:bold;">' . $formEmail .
                         '</span>.<br/>Please follow the instructions ' .
                         'in the mail<br/>in order to complete your' .
@@ -625,7 +712,7 @@ abstract class PhpMailingList {
                 }
 
                 self::unsubscribe($formEmail, $list);
-                self::printForm($list, null, null, null, 'Your email<br/>' .
+                self::printForm($list, null, null, null, null, 'Your email<br/>' .
                         '<span style="font-weight:bold;">' . $formEmail .
                         '</span><br/>has been removed from our mailing list.', false, $formModule);
             } else if ($action === 'sendmsgc') {
@@ -663,30 +750,28 @@ abstract class PhpMailingList {
                 $sendResult = self::sendMessageToList($formMessage, $list, $formAttachments);
 
                 if ($sendResult === null) { //success
-                    self::printForm($list, null, null, null, 'Successfully sent message to members of list.', false, $formModule);
+                    self::printForm($list, null, null, null, null, 'Successfully sent message to members of list.', false, $formModule);
                 } else { //display error
-                    self::printForm($list, $formEmail, $formMessage, $formAttachment, $sendResult, false, $formModule);
+                    self::printForm($list, $formEmail, $formMessage, $formAttachment, null, $sendResult, false, $formModule);
                 }
             } else if ($action === 'authsubc') {
                 $hash = isset($_GET['hash']) ? mb_strtolower($_GET['hash']) : null;
                 self::subscribeAuthorize($hash, $list);
-                self::printForm($list, null, null, null, 'Your email has been successfully authorized!<br/>' .
+                self::printForm($list, null, null, null, null, 'Your email has been successfully authorized!<br/>' .
                         'You have now joined the mailing list<br/>' .
                         '<span style="font-weight:bold;">' . $list .
                         '</span><br/>Feel free to send messages or ' .
                         'administrate your account. Enjoy!', false, $formModule);
             } else if ($action === 'showmembers') {
                 self::printMembers($list);
-            } else {
-                self::printForm($list, $formEmail, $replyToMsg, null, null, false, $formModule);
+            } else { // print form, optionally load message identified by $replyToMsgId
+                self::printForm($list, $formEmail, null, null, $replyToMsgId, null, false, $formModule);
             }
         } catch (UserException $e) {
-            self::printForm($list, $formEmail, $formMessage, $formAttachment, $e->getMessage(), false, $formModule);
+            self::printForm($list, $formEmail, $formMessage, $formAttachment, $replyToMsgId, $e->getMessage(), false, $formModule);
         } catch (Exception $e) {
             self::printError($e->getMessage());
         }
     }
 
 }
-
-?>
