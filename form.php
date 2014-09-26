@@ -40,12 +40,16 @@
         <link rel="stylesheet" type="text/css" title="CSS Stylesheet" href="style.css" />        
 
         <script type="text/javascript">
-            jQuery(document).ready(function(){
+            jQuery(document).ready(function () {
                 $("#accordion").accordion({
                     'autoHeight': false,
                     'collapsible': true,
                     'active': <?php echo ($formModule == 'admin' ? 0 : 1) ?>
                 });
+<?php if (!empty($message)) : ?>
+                    var msg = '<?php echo htmlentities(str_replace("'", "\'", preg_replace('/<br(\s)*(\/)?>/', '\n', $message))); ?>';
+                    $('textarea[name="message"]').html(msg);
+<?php endif; ?>
             });
         </script>
 
@@ -166,8 +170,7 @@
                         <div style="text-align: center;">
                             <fieldset>
                                 <legend><?php echo Config::__('Message'); ?></legend>
-                                <textarea name="message" rows="7" cols="20" style="width:475px; border: 0;"
-                                          <?php echo (($disabled) ? 'disabled="true"' : ''); ?>><?php echo (!empty($message) ? $message : ''); ?></textarea>
+                                <textarea name="message" rows="7" cols="20" style="width:475px; border: 0;" <?php echo (($disabled) ? 'disabled="true"' : ''); ?>></textarea>
                             </fieldset>
                         </div>
                         <div style="text-align: center;">

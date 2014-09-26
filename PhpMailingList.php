@@ -72,7 +72,7 @@ abstract class PhpMailingList {
             throw new Exception('So such message exists');
         }
 
-        return preg_replace("/\\n/", "\r\n", $message);
+        return $message;
     }
 
     /**
@@ -234,7 +234,8 @@ abstract class PhpMailingList {
             throw new Exception('Failed to open messages file.');
         }
 
-        $messageContent = "____START____" . $msgId . "____\n" . $message .
+        $messageContent = "____START____" . $msgId . "____\n"
+                . preg_replace('/<br(\s)*\/>/', '<br>', nl2br($message)) .
                 "\n____END____" . $msgId . "____";
 
         if (fputs($handle, "\n" . $messageContent) === false) {
