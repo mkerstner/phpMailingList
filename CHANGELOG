@@ -11,13 +11,11 @@ Legend:
 
 
 ---------------------------------
-Version 1.9.0 - Sep 24, 2014
+Version 1.9.0 - Sep 26, 2014
 ---------------------------------
 
 * minor code cleanup
 + added reply link based on message id (msgId)
-
-! Line breaks in loaded reply to message do not work properly
 
 ---------------------------------
 Version 1.8.3 - Dec 09, 2012
