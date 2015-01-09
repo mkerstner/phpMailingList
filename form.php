@@ -9,6 +9,7 @@
  * @param string? $email
  * @param string? $message
  * @param string? $userMessage
+ * @param string? $gaTrackingId
  *
  * This file is part of phpMailingList.
  * @link http://www.kerstner.at/phpmailinglist
@@ -34,9 +35,9 @@
         <title><?php echo Config::__('MailingList') . ': ' . $list; ?> | phpMailingList</title>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
-        <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+        <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
         <link rel="stylesheet" type="text/css" title="CSS Stylesheet" href="style.css" />        
 
         <script type="text/javascript">
@@ -52,6 +53,26 @@
 <?php endif; ?>
             });
         </script>
+
+        <?php if (!empty($gaTrackingId)) : ?>
+            <script>
+                (function (i, s, o, g, r, a, m) {
+                    i['GoogleAnalyticsObject'] = r;
+                    i[r] = i[r] || function () {
+                        (i[r].q = i[r].q || []).push(arguments)
+                    }, i[r].l = 1 * new Date();
+                    a = s.createElement(o),
+                            m = s.getElementsByTagName(o)[0];
+                    a.async = 1;
+                    a.src = g;
+                    m.parentNode.insertBefore(a, m)
+                })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+                ga('create', '<?php echo $gaTrackingId; ?>', 'auto');
+                ga('send', 'pageview');
+
+            </script>
+        <?php endif; ?>
 
     </head>
     <body>

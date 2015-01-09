@@ -372,11 +372,11 @@ abstract class PhpMailingList {
         $formFilename = Config::get('form_file');
         $formFile = self::getListFolder($list) . $formFilename;
         $formModule = (!in_array($formModule, array('admin', 'send')) || !$formModule) ? 'send' : $formModule;
+        $gaTrackingId = Config::get('google_analytics_tracking_id');
 
         if (!empty($replyToMsgId)) {
             $message = self::loadMessage($list, $replyToMsgId); // overwrite possible $message specified
         }
-
         if (!empty($formFilename) && file_exists($formFile)) {
             require_once $formFile; //customized file exists
         } else {
