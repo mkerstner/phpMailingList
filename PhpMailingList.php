@@ -618,12 +618,28 @@ abstract class PhpMailingList {
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
         $subject = Config::__('MessageFromList')
                 . ' "' . $list . '"';
+
+        // assemble message
         $messageOriginal = $message;
         $message .= "\n\n**" . Config::__('ReplyToLink') .
                 ":\n\n" .
                 self::getCurrentUrl(true) . '?list=' . $list;
         $messageId = hash('sha256', $from . rand(10000, 999999) . $subject . $message . time());
         $message .= '&msgId=' . $messageId;
+
+        // check for Google Analytics campaign tracking
+        if (Config::get('google_analytics_campaign_tracking_source') != '' &&
+                Config::get('google_analytics_campaign_tracking_medium') != '' &&
+                Config::get('google_analytics_campaign_tracking_campaign') != '') {
+            $message .= '&utm_source='
+                    . Config::get('google_analytics_campaign_tracking_source')
+                    . '&utm_medium='
+                    . Config::get('google_analytics_campaign_tracking_medium')
+                    . '&utm_campaign='
+                    . Config::get('google_analytics_campaign_tracking_campaign');
+        }
+
+        // assemble recipients
         $recipients = '';
 
         foreach ($members as $member) {
