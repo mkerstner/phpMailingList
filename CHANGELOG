@@ -9,6 +9,13 @@ Legend:
 ! Known issue / missing feature
 
 
+---------------------------------
+Version 2.2.0 - Jan 16, 2015
+---------------------------------
+
++ added support for Google Analytics event tracking
+
+=> make sure to update your config.ini.
 
 ---------------------------------
 Version 2.1.0 - Jan 11, 2015

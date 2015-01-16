@@ -9,7 +9,6 @@
  * @param string? $email
  * @param string? $message
  * @param string? $userMessage
- * @param string? $gaTrackingId
  *
  * This file is part of phpMailingList.
  * @link http://www.kerstner.at/phpmailinglist
@@ -51,10 +50,28 @@
                     var msg = '<?php echo htmlentities(str_replace("'", "\'", preg_replace('/<br(\s)*(\/)?>/', '\n', $message))); ?>';
                     $('textarea[name="message"]').html(msg);
 <?php endif; ?>
+
+                $('form#SendMessageForm').submit(function (evt) {
+<?php
+if (Config::get('google_analytics_event_send_category') !== '' &&
+        Config::get('google_analytics_event_send_action') !== '' &&
+        Config::get('google_analytics_event_send_label') !== '') :
+    ?>
+                        if (typeof ga !== 'undefined') {
+                            ga('send', 'event',
+                                    '<?php echo Config::get('google_analytics_event_send_category'); ?>',
+                                    '<?php echo Config::get('google_analytics_event_send_action'); ?>',
+                                    '<?php echo Config::get('google_analytics_event_send_label'); ?>',
+                                    '<?php echo Config::get('google_analytics_event_send_value'); ?>');
+                        }
+<?php endif; ?>
+
+                    return true;
+                });
             });
         </script>
 
-        <?php if (!empty($gaTrackingId)) : ?>
+        <?php if (Config::get('google_analytics_tracking_id') !== '') : ?>
             <script>
                 (function (i, s, o, g, r, a, m) {
                     i['GoogleAnalyticsObject'] = r;
@@ -68,7 +85,7 @@
                     m.parentNode.insertBefore(a, m)
                 })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
-                ga('create', '<?php echo $gaTrackingId; ?>', 'auto');
+                ga('create', '<?php echo Config::get('google_analytics_tracking_id'); ?>', 'auto');
                 ga('send', 'pageview');
 
             </script>
@@ -119,7 +136,8 @@
                 <h3><a href="#"><?php echo Config::__('Membership'); ?></a></h3>
 
                 <div class="sectionOuter administration">
-                    <form action="?list=<?php echo $list ?>&showModule=admin&locale=<?php echo Config::getLocale(); ?>" 
+                    <form action="?list=<?php echo $list ?>&showModule=admin&locale=<?php echo Config::getLocale(); ?>"
+                          id="MembershipForm" name="membershipForm"
                           method="post" enctype="multipart/form-data">
                         <div>
                             <fieldset>
@@ -183,7 +201,8 @@
 
                 <h3><a href="#"><?php echo Config::__('SendMessage'); ?></a></h3>
                 <div class="sectionOuter sendmessage">
-                    <form action="?list=<?php echo $list ?>&showModule=send&locale=<?php echo Config::getLocale(); ?>" 
+                    <form action="?list=<?php echo $list ?>&showModule=send&locale=<?php echo Config::getLocale(); ?>"
+                          id="SendMessageForm" name="sendMessageForm"
                           method="post" enctype="multipart/form-data">
 
                         <input name="action" type="hidden" value="sendmsgc" />
