@@ -52,6 +52,12 @@
 <?php endif; ?>
 
                 $('form#SendMessageForm').submit(function (evt) {
+
+                    if (!$('textarea#Message').val().length) {
+                        alert('<?php echo Config::__('PleaseEnterAMessage'); ?>.');
+                        return false;
+                    }
+
 <?php
 if (Config::get('google_analytics_event_send_category') !== '' &&
         Config::get('google_analytics_event_send_action') !== '' &&
@@ -61,8 +67,8 @@ if (Config::get('google_analytics_event_send_category') !== '' &&
                             ga('send', 'event',
                                     '<?php echo Config::get('google_analytics_event_send_category'); ?>',
                                     '<?php echo Config::get('google_analytics_event_send_action'); ?>',
-                                    '<?php echo Config::get('google_analytics_event_send_label'); ?>',
-                                    '<?php echo Config::get('google_analytics_event_send_value'); ?>');
+                                    '<?php echo Config::get('google_analytics_event_send_label'); ?>'
+    <?php echo Config::get('google_analytics_event_send_value') !== '' ? (',' . (int) Config::get('google_analytics_event_send_value')) : ''; ?>);
                         }
 <?php endif; ?>
 
@@ -210,7 +216,7 @@ if (Config::get('google_analytics_event_send_category') !== '' &&
                         <div style="text-align: center;">
                             <fieldset>
                                 <legend><?php echo Config::__('Message'); ?></legend>
-                                <textarea name="message" rows="7" cols="20" style="width:475px; border: 0;" <?php echo (($disabled) ? 'disabled="true"' : ''); ?>></textarea>
+                                <textarea id="Message" name="message" rows="7" cols="20" style="width:475px; border: 0;" <?php echo (($disabled) ? 'disabled="true"' : ''); ?>></textarea>
                             </fieldset>
                         </div>
                         <div style="text-align: center;">

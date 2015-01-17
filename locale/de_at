@@ -13,3 +13,4 @@ InvalidCAPTCHA = Ungültiger CAPTCHA Wert angegeben
 ReplyToLink = Um zu antworten bitte den folgenden Link verwenden
 MessageFromList = Nachricht der Liste
 MailingList = Mailing Liste
+PleaseEnterAMessage = Bitte geben Sie eine Nachricht an
