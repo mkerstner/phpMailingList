@@ -1,43 +1,59 @@
 
  phpMailingList
 
- A simple mailing list manager.
+ A simple mailing list manager written in PHP.
 
  Copyright (C) 2015 Matthias Kerstner <matthias@kerstner.at>
  See http://www.kerstner.at/phpmailinglist/ for more information.
 ================================================================================
 
-1.) INSTALLATION
+
+REQUIREMENTS
 -------------------------
 
-1.) Edit config.ini to your needs, make sure to specify a valid email for 
++ PHP 5.3 and higher
+
+
+INSTALLATION
+-------------------------
+
+1) Extract archive to root folder of your webserver, e.g. /wwwroot/phpmailinglist/
+
+2) Edit config.ini to your needs, make sure to specify a valid email for 
     "email_reply_to".
 
-2.) Customize form.php, members.php and error.php to your needs.
+3) Customize form.php, members.php and error.php to your needs.
 
-3.) Be sure to set correct permissions for the lists- and tmp-directory set in
+4) Be sure to set correct permissions for the lists- and tmp-directory set in
     config.ini.
 
-4.) Test your installation by creating a list, e.g.:
+5) Test your installation by creating a list, e.g.:
 
     lists/mylist/
 
-5.) Call index.php?list=mylist to use your shiny new mailing list.
+6) Call index.php?list=mylist to use your shiny new mailing list.
 
     Hint: In case you get write permission errors be sure to set the correct
           permissions for the lists- and tmp-directory (and any subdirectories and
           files).
 
-Enjoy!
+That should be it for now. Continue with the configuration section below to
+customize your setup.
 
-2.) CONFIGURATION
+
+CONFIGURATION
 --------------------------
 
 Everything you need (or can) configure can be found in config/config.ini. You
-are free to customize form.php and members.php to your needs. Make sure to leave
-the core input fields "as-is".
+are free to customize 
 
-3.) USAGE
++ form.php 
++ members.php 
+
+to your needs. Make sure to leave the core input fields "as-is".
+
+
+USAGE
 --------------------------
 
 phpMailingList provides the following core functionality:
@@ -52,7 +68,8 @@ In order to prevent SPAM messages a CAPTCHA field has to be filled out prior to
 any of the action provided by form.php, i.e. subscribe, unsubscribe and send
 messages.
 
-4.) FURTHER INFORMATION
+
+ADDITIONAL INFORMATION
 --------------------------
 
 In case you receive a "Failed to send mail" message with an empty recipient 

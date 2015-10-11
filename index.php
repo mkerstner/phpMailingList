@@ -47,7 +47,7 @@ try {
 } catch (Exception $e) {
     //try to write to log file
     file_put_contents(PHPMAILINGLIST_BASEPATH .
-                    Config::get('log_file'), $e->getMessage() . "\n", FILE_APPEND);
+            Config::get('log_file'), $e->getMessage() . "\n", FILE_APPEND);
 
     //there's nothing more we can do, good bye...
     die('Sorry, your request could not be processed. Please check your log file.');
