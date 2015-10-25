@@ -76,19 +76,6 @@ abstract class PhpMailingList {
     }
 
     /**
-     *
-     * @param string? $authHash
-     * @return string? email of authenticated user
-     */
-    private static function checkAuth($authHash = null) {
-        if (Config::get('require_authentication') != '') {
-            throw new Exception('Failed to authenticate.' .
-            '<br/>Please use the link provided in the initial ' .
-            'subscription mail.');
-        }
-    }
-
-    /**
      * Checks if list-directory exists and initializes it on demand, otherwise
      * throws an Exception.
      * @param string $list
@@ -96,27 +83,31 @@ abstract class PhpMailingList {
     private static function checkForList($list) {
 
         if (empty($list)) {
-            throw new Exception('No list specified.');
+            throw new Exception(Config::__('NoListSpecified'));
         } else if (!file_exists(self::getListFolder($list))) {
-            throw new Exception('List<br/><span style="font-weight:bold;">' .
-            $list . '</span><br/>does not exist.');
+            throw new Exception('List ' . $list . ' does not exist.');
         }
 
         $membersHandle = fopen(self::getMembersFilePath($list), 'ab+');
         $authHandle = fopen(self::getSubscribeAuthorizationFilePath($list), 'ab+');
         $unauthHandle = fopen(self::getUnsubscribeAuthorizationFilePath($list), 'ab+');
         $messagesHandle = fopen(self::getMessagesFilePath($list), 'ab+');
-        $htaccessHandle = fopen(PHPMAILINGLIST_BASEPATH .
-                Config::get('lists_folder') . '.htaccess', 'ab+');
+        $htaccessHandle = fopen(self::getHtaccessFilePath(), 'ab+');
 
         if (!$membersHandle || !$authHandle || !$unauthHandle ||
                 !$htaccessHandle) {
-            throw new Exception('Failed to initialize list ' . $list);
+            throw new Exception('Failed to initialize list ' . $list
+            . '. Hint for permissions.');
         }
 
-        $htaccessContent = 'deny from all';
-        if (!fwrite($htaccessHandle, $htaccessContent, mb_strlen($htaccessContent))) {
-            throw new Exception('Failed to create htaccess file.');
+
+        // only write once in .htaccess
+        if (!filesize(self::getHtaccessFilePath())) {
+            $htaccessContent = 'deny from all';
+
+            if (!fwrite($htaccessHandle, $htaccessContent, mb_strlen($htaccessContent))) {
+                throw new Exception('Failed to create htaccess file.');
+            }
         }
 
         fclose($membersHandle);
@@ -267,13 +258,21 @@ abstract class PhpMailingList {
     }
 
     /**
-     * Returns path to list folder.
+     * Returns path to lists folder.
+     * @return string
+     */
+    private static function getListsFolder() {
+        return (PHPMAILINGLIST_BASEPATH . Config::get('lists_folder'));
+    }
+
+    /**
+     * Returns path to specific list folder.
      * @param string $list
      * @return string
      */
     private static function getListFolder($list) {
-        return (PHPMAILINGLIST_BASEPATH . Config::get('lists_folder') .
-                basename($list) . PHPMAILINGLIST_DIRSEPERATOR);
+        return self::getListsFolder() . basename($list)
+                . PHPMAILINGLIST_DIRSEPERATOR;
     }
 
     /**
@@ -307,6 +306,16 @@ abstract class PhpMailingList {
     }
 
     /**
+     * Returns path to password file.
+     * @param string $list
+     * @return string
+     */
+    private static function getPasswordFilePath($list) {
+        return (self::getListFolder($list) . Config::get('rand_prefix') .
+                'password');
+    }
+
+    /**
      * Returns path to messages file..
      * @param string $list
      * @return string
@@ -314,6 +323,14 @@ abstract class PhpMailingList {
     private static function getMessagesFilePath($list) {
         return (self::getListFolder($list) . Config::get('rand_prefix') .
                 'messages');
+    }
+
+    /**
+     * Returns path to .htaccess file used for *all* list folders.
+     * @return string
+     */
+    private static function getHtaccessFilePath() {
+        return (self::getListsFolder() . '.htaccess');
     }
 
     /**
@@ -370,41 +387,30 @@ abstract class PhpMailingList {
      */
     private static function printForm($list = null, $email = null, $message = null, $attachment = null, $replyToMsgId = null, $userMessage = null, $disabled = false, $formModule = 'send') {
         $formFilename = Config::get('form_file');
+        $adminFilename = Config::get('admin_file');
         $formFile = self::getListFolder($list) . $formFilename;
         $formModule = (!in_array($formModule, array('admin', 'send')) || !$formModule) ? 'send' : $formModule;
 
         if (!empty($replyToMsgId)) {
             $message = self::loadMessage($list, $replyToMsgId); // overwrite possible $message specified
         }
-        if (!empty($formFilename) && file_exists($formFile)) {
-            require_once $formFile; //customized file exists
-        } else {
-            require_once PHPMAILINGLIST_BASEPATH . 'form.php'; //take default
-        }
-    }
 
-    /**
-     * Prints members.
-     * @param string $list
-     * @see members.php
-     * @see config.ini
-     */
-    private static function printMembers($list) {
-        $membersData = self::getMembers($list);
-        $members = array();
+        if ($formModule === 'send') {
+            if (!empty($formFilename) && file_exists($formFile)) {
+                require_once $formFile; //customized file exists
+                return;
+            }
+        } else if ($formModule === 'admin') {
 
-        foreach ($membersData as $member) {
-            $members[] = $member[1];
+            $members = self::getMembers($list);
+
+            if (!empty($adminFilename) && file_exists($adminFilename)) {
+                require_once $adminFilename; //customized file exists
+                return;
+            }
         }
 
-        $membersFilename = Config::get('members_file');
-        $membersFile = self::getListFolder($list) . $membersFilename;
-
-        if (!empty($membersFilename) && file_exists($membersFile)) {
-            require_once $membersFile; //customized file exists
-        } else {
-            require_once PHPMAILINGLIST_BASEPATH . 'members.php'; //take default
-        }
+        require_once PHPMAILINGLIST_BASEPATH . 'form.php'; //take default
     }
 
     /**
@@ -417,6 +423,7 @@ abstract class PhpMailingList {
     private static function printError($message, $list = null) {
         $errorFilename = Config::get('error_file');
         $errorFile = self::getListFolder($list) . $errorFilename;
+        $userMessage = $message;
 
         if (!empty($errorFilename) && file_exists($errorFile)) {
             require_once $errorFile; //customized file exists
@@ -436,12 +443,12 @@ abstract class PhpMailingList {
         try {
             Email::verifyAndSplitEmail($email);
         } catch (Exception $e) {
-            throw new UserException('Failed to subscribe: ' . $e->getMessage());
+            throw new UserException(Config::__('FailedToSubscribe') . ': '
+            . Config::__($e->getMessage()));
         }
 
         if (self::isMember($list, $email)) {
-            throw new UserException('Email is already included in this ' .
-            'mailing list.');
+            throw new UserException(Config::__('EmailAlreadyInList'));
         }
 
         $authorizationFile = self::getSubscribeAuthorizationFilePath($list);
@@ -457,8 +464,7 @@ abstract class PhpMailingList {
             'authorization file.');
         }
         if (mb_strpos($authorizationFileContent, "<$email>") !== false) {
-            throw new UserException('Email is already pending authorization ' .
-            'for subscription.');
+            throw new UserException(Config::__('EmailIsAlreadyPendingAuthorization'));
         }
 
         $hash = md5($email . (string) time() . (string) rand(1, 256));
@@ -574,7 +580,7 @@ abstract class PhpMailingList {
         }
 
         if (!self::isMember($list, $email)) {
-            throw new UserException('Email is not subscribed to this mailing list.');
+            throw new UserException(Config::__('EmailNotSubscribedToList'));
         }
 
         self::removeMember($list, $email);
@@ -605,13 +611,13 @@ abstract class PhpMailingList {
     private static function sendMessageToList($message, $list, $attachments = null) {
 
         if (empty($message)) {
-            throw new UserException('Failed to send message: No message specified.');
+            throw new UserException(Config::__('FailedToSendMessageNoMessageSpecified'));
         }
 
         $members = self::getMembers($list);
 
         if (count($members) < 1) {
-            throw new UserException('List does not have any members.');
+            throw new UserException(Config::__('ListHasNoMembers'));
         }
 
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
@@ -623,7 +629,7 @@ abstract class PhpMailingList {
         $message .= "\n\n**" . Config::__('ReplyToLink') .
                 ":\n\n" .
                 self::getCurrentUrl(true) . '?list=' . $list;
-        $messageId = hash('sha256', $from . rand(10000, 999999) . $subject . $message . time());
+        $messageId = rand(10000, 999999) . time(); //yeah, a little too deterministic ;)
         $message .= '&msgId=' . $messageId;
 
         // check for Google Analytics campaign tracking
@@ -647,8 +653,7 @@ abstract class PhpMailingList {
         }
 
         try {
-            Email::sendEmail($from, null, wordwrap($message .
-                            self::getFooter(true)), $subject, $attachments, $recipients);
+            Email::sendEmail($from, null, ($message . self::getFooter(true)), $subject, $attachments, $recipients);
 
             //TODO: remove files from tmp again            
 
@@ -689,50 +694,189 @@ abstract class PhpMailingList {
     }
 
     /**
+     * Returns password hash of list set in password file.
+     * @param string $list
+     * @return string
+     */
+    private static function getListPassword($list) {
+        $filepath = self::getPasswordFilePath($list);
+        $lines = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        if ($lines === false) {
+            throw new Exception('Failed to open password file.');
+        }
+
+        return $lines[0];
+    }
+
+    /**
+     * Checks authorization setting and returns TRUE if authorization is 
+     * required for list.
+     * @return boolean
+     */
+    private static function requireAuthentication() {
+        return filter_var(Config::get('require_authentication'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * 
+     * @param type $locale
+     * @return string
+     */
+    public static function getLocaleUrl($locale) {
+        $url = 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://'
+                . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+
+        if (mb_strpos($url, 'locale=') !== false) {
+            $url = preg_replace('/locale=([^&]*|$)/i', 'locale=' . $locale, $url);
+        } else {
+            $url .= '&locale=' . $locale;
+        }
+
+        return $url;
+    }
+
+    /**
+     * 
+     * @return type
+     */
+    public static function isLoggedIn() {
+        return isset($_SESSION['pml_logged_in']);
+    }
+
+    /**
+     * 
+     */
+    public static function logout() {
+        $_SESSION = array();
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]
+            );
+        }
+
+        session_destroy();
+
+        $redirectURL = (@$_SERVER["HTTPS"] == "on") ? "https://" : "http://";
+        if ($_SERVER["SERVER_PORT"] != "80") {
+            $redirectURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+        } else {
+            $redirectURL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
+        }
+
+        // replace previous login call with call to "form"
+        $redirectURL = str_replace('showModule=logout', '', $redirectURL);
+        header('Location: ' . $redirectURL);
+        exit;
+    }
+
+    /**
+     * 
+     * @param type $list
+     */
+    public static function login($list) {
+        try {
+
+            if (self::isLoggedIn()) {
+                return; // already logged in
+            }
+
+            $password = null;
+
+            if (self::requireAuthentication() && !isset($_SESSION['pml_logged_in'])) {
+                $password = isset($_POST['pml_login_password']) ? $_POST['pml_login_password'] : null;
+            }
+
+            $redirectURL = (@$_SERVER["HTTPS"] == "on") ? "https://" : "http://";
+            if ($_SERVER["SERVER_PORT"] != "80") {
+                $redirectURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+            } else {
+                $redirectURL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
+            }
+
+            self::checkForList($list); //auto-initialize list
+
+            if (md5($password) === trim(self::getListPassword($list))) {
+                $_SESSION['pml_logged_in'] = true;
+            }
+
+            unset($_POST['pml_login_password']);
+
+            if (isset($_SESSION['pml_logged_in'])) {
+                // replace previous login call with call to "form"
+                $redirectURL = str_replace('action=login', 'action=', $redirectURL);
+                header('Location: ' . $redirectURL);
+                exit;
+            }
+
+            $userMessage = '';
+            if (!empty($password)) {
+                $userMessage = Config::__('LoginFailed');
+            }
+
+            require_once 'login.php';
+            die;
+        } catch (UserException $e) {
+            $userMessage = $e->getMessage();
+            require_once 'login.php';
+            die;
+        } catch (Exception $e) {
+            self::printError($e->getMessage());
+        }
+    }
+
+    /**
      * Processes action for list specified.
      * @param string? $action
      * @param string? $list
-     * @param string? $locale
      */
-    public static function processRequest($action = null, $list = null, $locale = null) {
-        $authHash = isset($_GET['auth']) ? $_GET['auth'] : null;
-        $formEmail = isset($_POST['email']) ? mb_strtolower($_POST['email']) :
+    public static function processRequest($action = null, $list = null) {
+        $formEmail = isset($_POST['pmlEmail']) ? mb_strtolower($_POST['pmlEmail']) :
                 null;
-        $formMessage = isset($_POST['message']) ? $_POST['message'] : null;
-        $formAttachment = isset($_POST['attachment']) ? $_POST['attachment'] : null;
+        $formMessage = isset($_POST['pmlMessage']) ? $_POST['pmlMessage'] : null;
+        $formAttachment = isset($_POST['pmlAttachment']) ? $_POST['pmlAttachment'] : null;
         $replyToMsgId = isset($_GET['msgId']) ? urldecode($_GET['msgId']) : null;
         $formModule = isset($_GET['showModule']) ? $_GET['showModule'] : null;
 
+        /**
+         * handle logout request, destroy session and continue request
+         */
+        if ($formModule === 'logout') {
+            self::logout();
+            $formModule = null; // reset request
+        }
+        /**
+         * handle authentication if activated via configuration
+         */
+        self::login($list);
+
+        header('Content-type: text/html; charset=utf-8');
+
         try {
-            self::checkAuth($authHash); //check authentication on demand
             self::checkForList($list); //auto-initialize list
 
             $securimage = new Securimage();
 
             if ($action === 'subc') {
-                if ($securimage->check($_POST['captcha_code']) == false) {
+                if (!self::requireAuthentication() &&
+                        $securimage->check($_POST['captcha_code']) == false) {
                     throw new UserException('InvalidCAPTCHA');
                 }
 
                 self::subscribe($formEmail, $list);
-                self::printForm($list, null, null, null, null, 'An authorization request has been sent to<br/>' .
-                        '<span style="font-weight:bold;">' . $formEmail .
-                        '</span>.<br/>Please follow the instructions ' .
-                        'in the mail<br/>in order to complete your' .
-                        '<br/>subscription to the mailing list<br/>' .
-                        '<span style="font-weight:bold;">' . $list .
-                        '</span>.', false, $formModule);
+                self::printForm($list, null, null, null, null, Config::__('AuthorizationRequestSent'), false, $formModule);
             } else if ($action === 'unsubc') {
-                if ($securimage->check($_POST['captcha_code']) == false) {
+                if (!self::requireAuthentication() &&
+                        $securimage->check($_POST['captcha_code']) == false) {
                     throw new UserException('InvalidCAPTCHA');
                 }
 
                 self::unsubscribe($formEmail, $list);
-                self::printForm($list, null, null, null, null, 'Your email<br/>' .
-                        '<span style="font-weight:bold;">' . $formEmail .
-                        '</span><br/>has been removed from our mailing list.', false, $formModule);
+                self::printForm($list, null, null, null, null, Config::__('EmailRemovedFromList'), false, $formModule);
             } else if ($action === 'sendmsgc') {
-                if ($securimage->check($_POST['captcha_code']) == false) {
+                if (!self::requireAuthentication() &&
+                        $securimage->check($_POST['captcha_code']) == false) {
                     throw new UserException('InvalidCAPTCHA');
                 }
 
@@ -766,7 +910,7 @@ abstract class PhpMailingList {
                 $sendResult = self::sendMessageToList($formMessage, $list, $formAttachments);
 
                 if ($sendResult === null) { //success
-                    self::printForm($list, null, null, null, null, 'Successfully sent message to members of list.', false, $formModule);
+                    self::printForm($list, null, null, null, null, Config::__('MessageSuccessfullySent'), false, $formModule);
                 } else { //display error
                     self::printForm($list, $formEmail, $formMessage, $formAttachment, null, $sendResult, false, $formModule);
                 }
@@ -778,9 +922,7 @@ abstract class PhpMailingList {
                         '<span style="font-weight:bold;">' . $list .
                         '</span><br/>Feel free to send messages or ' .
                         'administrate your account. Enjoy!', false, $formModule);
-            } else if ($action === 'showmembers') {
-                self::printMembers($list);
-            } else { // print form, optionally load message identified by $replyToMsgId
+            } else { // print form (form or admin), optionally load message identified by $replyToMsgId
                 self::printForm($list, $formEmail, null, null, $replyToMsgId, null, false, $formModule);
             }
         } catch (UserException $e) {

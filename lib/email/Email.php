@@ -43,7 +43,7 @@ abstract class Email {
      */
     public static function verifyAndSplitEmail($email) {
         if (empty($email)) {
-            throw new Exception('Empty email verification list specified.');
+            throw new Exception('NoEmailSpecified');
         }
 
         $emailList = is_array($email) ? $email : array($email);
@@ -58,7 +58,7 @@ abstract class Email {
             $split = explode('@', $v);
 
             if (count($split) !== 2) {
-                throw new Exception('Invalid email: \'' . $v . '\'');
+                throw new Exception('InvalidEmail'); //: \'' . $v . '\'');
             }
 
             foreach ($split as $sK => $sV) { //remove ambigious symbols

@@ -34,15 +34,15 @@ define('PHPMAILINGLIST_BASEPATH', mb_ereg_replace('/\\/g', PHPMAILINGLIST_DIRSEP
 
 require_once PHPMAILINGLIST_BASEPATH . 'PhpMailingList.php';
 
-session_start(); //needed by lib/phpcaptcha
+session_start();
 
+// get required paramaters so that we could manually call PhpMailingList
 $action = isset($_POST['action']) ? $_POST['action'] :
         (isset($_GET['action']) ? $_GET['action'] : null); //post before get
 $list = isset($_GET['list']) ? urldecode($_GET['list']) : null;
 
 try {
     Config::init(PHPMAILINGLIST_BASEPATH . 'config/config.ini');
-    header('Content-type: text/html; charset=utf-8');
     PhpMailingList::processRequest($action, $list);
 } catch (Exception $e) {
     //try to write to log file

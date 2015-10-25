@@ -22,16 +22,21 @@ INSTALLATION
 2) Edit config.ini to your needs, make sure to specify a valid email for 
     "email_reply_to".
 
-3) Customize form.php, members.php and error.php to your needs.
+3) Customize form.php, error.php and admin.php to your needs.
 
 4) Be sure to set correct permissions for the lists- and tmp-directory set in
     config.ini.
 
-5) Test your installation by creating a list, e.g.:
+5) In case you want to password protect your list create a password file. This
+   file should only contain one line - the md5 hash'ed value of your password,
+   e.g. 098f6bcd4621d373cade4e832627b4f6 for password "test". Have a look at the
+   sample list's password file.
+
+6) Test your installation by creating a list, e.g.:
 
     lists/mylist/
 
-6) Call index.php?list=mylist to use your shiny new mailing list.
+7) Call index.php?list=mylist to use your shiny new mailing list.
 
     Hint: In case you get write permission errors be sure to set the correct
           permissions for the lists- and tmp-directory (and any subdirectories and
@@ -48,7 +53,8 @@ Everything you need (or can) configure can be found in config/config.ini. You
 are free to customize 
 
 + form.php 
-+ members.php 
++ admin.php 
++ error.php
 
 to your needs. Make sure to leave the core input fields "as-is".
 
@@ -58,15 +64,34 @@ USAGE
 
 phpMailingList provides the following core functionality:
 
-1.) subscribe: Add members to a mailing list via form.php
-2.) unsubscribe: Remove subscribed members from a mailing list
-3.) authorize: Authorize a subscription request
-4.) send message: Send messages to all members of a mailing list, optionally 
+1) SUBSCRIBE: Add members to a mailing list via form.php
+
+2) UNSUBSCRIBE: Remove subscribed members from a mailing list
+
+3) AUTHORIZE: Authorize a subscription request
+
+4) SEND MESSAGE: Send messages to all members of a mailing list, optionally 
     with files attached.
+
+
+SPAM Prevention
+---------------
+
+Starting with version 3 you have the option to either force list members to
+LOG IN or to use the CAPTCHA functionality to prevent spam.
+
+1) CAPTCHA
 
 In order to prevent SPAM messages a CAPTCHA field has to be filled out prior to
 any of the action provided by form.php, i.e. subscribe, unsubscribe and send
-messages.
+messages. 
+
+This is the default behavior.
+
+2) LOG IN
+
+If you want your users to log in order to be able to send messages activate the
+option require_authentication in the configuration.
 
 
 ADDITIONAL INFORMATION

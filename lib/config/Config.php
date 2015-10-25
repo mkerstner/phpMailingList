@@ -82,7 +82,7 @@ abstract class Config {
         if (!file_exists($localeFilePath) || !is_file($localeFilePath)) {
             throw new ConfigurationException('No translation file exists.');
         }
-
+        
         if ($localeFilePath !== null) {
             self::$translation_ = parse_ini_file($localeFilePath);
         } else {

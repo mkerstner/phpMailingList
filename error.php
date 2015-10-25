@@ -1,9 +1,9 @@
 <?php
 /**
  * @filesource error.php
- **@author Matthias Kerstner <matthias@kerstner.at>
+ * @author Matthias Kerstner <matthias@kerstner.at>
  *
- * @param string? $message
+ * @param string? $userMessage
  *
  * This file is part of phpMailingList.
  * @link http://www.kerstner.at/phpmailinglist
@@ -23,29 +23,31 @@
  */
 ?>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
-    <head>
-        <title>Error - phpMailingList</title>
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-        <link rel="stylesheet" type="text/css" title="CSS Stylesheet" href="style.css" />
-    </head>
-    <body>
+<?php
+require_once '_head.php';
+?>
 
-        <div class="outerContainer">
+<body>
 
-            <div class="header">
-                <h1>Error</h1>
-            </div>
+    <?php
+    require '_navigation.php';
+    ?>
 
-            <div class="error"><?php echo $message; ?></div>
+    <div class="container-fluid">
 
-            <br/><br/>
-            <div class="footer">
-                powered by <a href="http://www.kerstner.at/phpmailinglist">phpMailingList</a>
-            </div>
-
+        <div class="page-header">
+            <h1><?php echo Config::__('WellThatsEmbarassing'); ?></h1>
         </div>
 
-    </body>
+        <?php if (isset($userMessage) && !empty($userMessage)) : ?>
+            <div class="alert alert-warning" role="alert">
+                <?php echo $userMessage; ?></div>
+            <?php endif; ?>
+
+        <?php
+        require '_footer.php';
+        ?>
+
+    </div> <!-- /container -->
+</body>
 </html>

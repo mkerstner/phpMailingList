@@ -10,6 +10,15 @@ Legend:
 
 
 ---------------------------------
+Version 3.0.0 - Oct 25, 2015
+---------------------------------
+
+* fixed .htaccess problem (duplicate generation of "deny from all" text)
++ added list password functionality
++ switched to responsive layout
++ added translations
+
+---------------------------------
 Version 2.2.1 - Jan 17, 2015
 ---------------------------------
 
