@@ -6,7 +6,7 @@
  * @copyright Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
- * @link http://www.kerstner.at/phpmailinglist/
+ * @link https://www.kerstner.at/phpmailinglist/
  *
  * This script is based upon the 'Email list script' by phptutorial.info,
  * @link http://www.phptutorial.info/scripts/mailinglist/index.php

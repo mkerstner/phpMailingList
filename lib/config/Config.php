@@ -4,7 +4,7 @@
  * Copyright (c) 2012 Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
- * @link http://www.kerstner.at/phpmailinglist
+ * @link https://www.kerstner.at/phpmailinglist
  *
  * @filesource Config.php
  * *@author Matthias Kerstner <matthias@kerstner.at>

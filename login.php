@@ -9,7 +9,7 @@
  * @param string? $userMessage
  *
  * This file is part of phpMailingList.
- * @link http://www.kerstner.at/phpmailinglist
+ * @link https://www.kerstner.at/phpmailinglist
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

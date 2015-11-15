@@ -32,3 +32,4 @@ AuthorizationRequestSent = "An authorization request has been sent. Please follo
 EmailRemovedFromList = "Email successfully removed from list."
 ListHasNoMembers = "Currently list has no members."
 AdministrateListHere = "Here you can administrate the members of the list"
+PendingAuthorizationsOfList = "Pending memberships"

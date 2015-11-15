@@ -7,12 +7,13 @@
  * @param string $list
  * @param bool $disabled
  * @param array $members
+ * @param array $pendingMembers
  * @param string? $email
  * @param string? $message
  * @param string? $userMessage
  *
  * This file is part of phpMailingList.
- * @link http://www.kerstner.at/phpmailinglist
+ * @link https://www.kerstner.at/phpmailinglist
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +53,7 @@ require_once '_head.php';
               method="post" enctype="multipart/form-data">
 
             <div class="form-group">
-                <p class="text-left" style="font-weight:bold;"><?php echo Config::__('AdministrateListHere');?>:</p>
+                <p class="text-left" style="font-weight:bold;"><?php echo Config::__('AdministrateListHere'); ?>:</p>
                 <div class="input-group">
                     <span class="input-group-addon" id="sizing-addon2">Email</span>
                     <input type="text" class="form-control" 
@@ -125,6 +126,21 @@ require_once '_head.php';
                 echo '<li>' . Config::__('ListHasNoMembers') . '</li>';
             } else {
                 foreach ($members as $v) {
+                    if ($v !== '') {
+                        echo '<li>' . $v[1] . '</li>';
+                    }
+                }
+            }
+            ?>
+        </ul>
+
+        <p style="font-weight: bold;"><?php echo Config::__('PendingAuthorizationsOfList') . ' ' . $list; ?>:</p>
+        <ul>
+            <?php
+            if (!count($pendingMembers)) {
+                echo '<li>' . Config::__('ListHasNoMembers') . '</li>';
+            } else {
+                foreach ($pendingMembers as $v) {
                     if ($v !== '') {
                         echo '<li>' . $v[1] . '</li>';
                     }

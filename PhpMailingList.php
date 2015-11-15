@@ -6,7 +6,7 @@
  * @copyright Matthias Kerstner <matthias@kerstner.at>
  *
  * This file is part of phpMailingList.
- * @link http://www.kerstner.at/phpmailinglist
+ * @link https://www.kerstner.at/phpmailinglist
  *
  * This script is based upon the 'Email list script' by phptutorial.info,
  * @link http://www.phptutorial.info/scripts/mailinglist/index.php
@@ -133,6 +133,31 @@ abstract class PhpMailingList {
         }
 
         return false;
+    }
+
+    /**
+     * 
+     * @param type $list
+     * @param type $email
+     * @throws Exception
+     * @throws UserException
+     */
+    private static function isPendingAuthorization($list, $email) {
+        $authorizationFile = self::getSubscribeAuthorizationFilePath($list);
+        $authorizationHandle = fopen($authorizationFile, 'ab+');
+        if (!$authorizationHandle) {
+            throw new Exception('Failed to subscribe: Could not open ' .
+            'required file(s).');
+        }
+
+        $authorizationFileContent = fread($authorizationHandle, filesize($authorizationFile) + 1);
+        if ($authorizationFileContent === false) {
+            throw new Exception('Failed to read authorization file.');
+        }
+
+        @fclose($authorizationHandle);
+
+        return (mb_strpos($authorizationFileContent, "<$email>") !== false);
     }
 
     /**
@@ -401,8 +426,8 @@ abstract class PhpMailingList {
                 return;
             }
         } else if ($formModule === 'admin') {
-
             $members = self::getMembers($list);
+            $pendingMembers = self::getPendingAuthorizations($list);
 
             if (!empty($adminFilename) && file_exists($adminFilename)) {
                 require_once $adminFilename; //customized file exists
@@ -434,6 +459,7 @@ abstract class PhpMailingList {
 
     /**
      * Subscribes $email to $list by first sending an authorization request.
+     * Adds entry to pending authorizations file. 
      * Automatically tries to create required files.
      * @param string $email
      * @param string $list
@@ -450,6 +476,11 @@ abstract class PhpMailingList {
         if (self::isMember($list, $email)) {
             throw new UserException(Config::__('EmailAlreadyInList'));
         }
+        if (self::isPendingAuthorization($list, $email)) {
+            throw new UserException(Config::__('EmailIsAlreadyPendingAuthorization'));
+        }
+
+        $hash = md5($email . (string) time() . (string) rand(1, 256));
 
         $authorizationFile = self::getSubscribeAuthorizationFilePath($list);
         $authorizationHandle = fopen($authorizationFile, 'ab+');
@@ -457,18 +488,6 @@ abstract class PhpMailingList {
             throw new Exception('Failed to subscribe: Could not open ' .
             'required file(s).');
         }
-
-        $authorizationFileContent = fread($authorizationHandle, filesize($authorizationFile) + 1);
-        if ($authorizationFileContent === false) {
-            throw new Exception('Failed to subscribe: Could not read ' .
-            'authorization file.');
-        }
-        if (mb_strpos($authorizationFileContent, "<$email>") !== false) {
-            throw new UserException(Config::__('EmailIsAlreadyPendingAuthorization'));
-        }
-
-        $hash = md5($email . (string) time() . (string) rand(1, 256));
-
         if (fputs($authorizationHandle, "\n<$hash> : <$email>") === false) {
             throw new Exception('Failed to subscribe. Could not write to ' .
             'authorization file.');
@@ -663,6 +682,33 @@ abstract class PhpMailingList {
         } catch (Exception $e) {
             return 'Failed to send mail to list: ' . $e->getMessage();
         }
+    }
+
+    /**
+     * Returns pending authorizations for list specified.
+     * @param string $list
+     * @return array [[0]=hash, [1]=email]
+     */
+    private static function getPendingAuthorizations($list) {
+        $members = array();
+        $filepath = self::getSubscribeAuthorizationFilePath($list);
+        $lines = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        if ($lines === false) {
+            throw new Exception('Failed to open pending authorizations file.');
+        }
+
+        foreach ($lines as $line) {
+            $member = explode(' : ', $line); //[0]=<hash>, [1]=<email>
+
+            if (count($member) < 2) {
+                throw new Exception('Invalid syntax in members file.');
+            }
+
+            $members[] = array($member[0], self::removeEmailTags($member[1]));
+        }
+
+        return $members;
     }
 
     /**

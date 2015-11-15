@@ -43,3 +43,4 @@ AuthorizationRequestSent = "Eine Bestätigungsanfrage wurde verschickt. Bitte fo
 EmailRemovedFromList = "E-Mail wurde erfolgreich aus der Liste entfernt."
 ListHasNoMembers = "Liste hat derzeit keine Mitglieder."
 AdministrateListHere = "Hier kannst du die Verwaltung der Mitglieder durchführen"
+PendingAuthorizationsOfList = "Ausständige Mitgliedschaften"
