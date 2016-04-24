@@ -534,10 +534,23 @@ abstract class PhpMailingList {
 
         $authUrl = self::getCurrentUrl(true) . '?list=' . $list .
                 '&action=authsubc&hash=' . $hash;
+
+        /**
+         * shorten reply URL using Google urlshortener API
+         */
+        try {
+            if (Config::get('google_urlshortener_api_token') != '') {
+                $googleShortUrl = new Googl(Config::get('google_urlshortener_api_token'));
+                $authUrl = $googleShortUrl->shorten($authUrl);
+            }
+        } catch (Exception $e) {
+            Log::log('Failed to generated short URL for ' . $authUrl);
+        }
+
         $from = ($list . ' <' . Config::get('email_reply_to') . '>');
         $subject = 'Authorization request for mailing list "' . $list . '"';
         $message = "Hello,\n\nsomeone (hopefully you) has requested to add your " .
-                "email address \n\n" . $email . "\n\nto the mailing list\n\n\"" .
+                "email address " . $email . " to the mailing list \"" .
                 $list . "\"\n\n" .
                 "In order to complete this request please use the following " .
                 "link:\n\n" . $authUrl . "\n\n" .
