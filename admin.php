@@ -142,7 +142,10 @@ require_once '_head.php';
             } else {
                 foreach ($pendingMembers as $v) {
                     if ($v !== '') {
-                        echo '<li>' . $v[1] . '</li>';
+                        echo '<li>' . $v[1] . ': <a href="?list='
+                        . $list . '&showModule=admin&resendInvitation=' . $v[1]
+                        . '&locale=' . Config::getLocale() . '">'
+                        . Config::__('ResendPendingInvitation') . '</a></li>';
                     }
                 }
             }

@@ -31,6 +31,7 @@
 require_once PHPMAILINGLIST_BASEPATH . 'lib/config/Config.php';
 require_once PHPMAILINGLIST_BASEPATH . 'lib/phpcaptcha/securimage.php';
 require_once PHPMAILINGLIST_BASEPATH . 'lib/email/Email.php';
+require_once PHPMAILINGLIST_BASEPATH . 'lib/googl-php/Googl.class.php';
 require_once PHPMAILINGLIST_BASEPATH . 'UserException.php';
 
 abstract class PhpMailingList {
@@ -429,6 +430,22 @@ abstract class PhpMailingList {
             $members = self::getMembers($list);
             $pendingMembers = self::getPendingAuthorizations($list);
 
+            /**
+             * check if resend invitation to a pending member is requested
+             */
+            if (isset($_GET['resendInvitation']) && $_GET['resendInvitation'] !== '') {
+                $resendToPendingMember = $_GET['resendInvitation'];
+
+                if (self::isPendingAuthorization($list, $resendToPendingMember)) {
+                    try {
+                        self::subscribe($resendToPendingMember, $list, true);
+                        $userMessage = Config::__('InvitationSentAgain');
+                    } catch (Exception $e) {
+                        $userMessage = $e->getMessage();
+                    }
+                }
+            }
+
             if (!empty($adminFilename) && file_exists($adminFilename)) {
                 require_once $adminFilename; //customized file exists
                 return;
@@ -463,8 +480,13 @@ abstract class PhpMailingList {
      * Automatically tries to create required files.
      * @param string $email
      * @param string $list
+     * @param boolean $allowResendInvitation if set to TRUE will allow to resend
+     *                invitation mail to pending member even if invitation has 
+     *                been sent before. Otherwise (default) will throw an 
+     *                exception saying that this member already has a pending
+     *                invitation.
      */
-    private static function subscribe($email, $list) {
+    private static function subscribe($email, $list, $allowResendInvitation = false) {
 
         try {
             Email::verifyAndSplitEmail($email);
@@ -477,21 +499,37 @@ abstract class PhpMailingList {
             throw new UserException(Config::__('EmailAlreadyInList'));
         }
         if (self::isPendingAuthorization($list, $email)) {
-            throw new UserException(Config::__('EmailIsAlreadyPendingAuthorization'));
+            if (!$allowResendInvitation) {// quit with exception since it's already pending
+                throw new UserException(Config::__('EmailIsAlreadyPendingAuthorization'));
+            }
+            /**
+             * otherwise allow to resend invitation mail to pending member but 
+             * do *not* create an additional entry in the pending invitation 
+             * file for this list. See section below for more info.
+             */
         }
 
         $hash = md5($email . (string) time() . (string) rand(1, 256));
-
         $authorizationFile = self::getSubscribeAuthorizationFilePath($list);
         $authorizationHandle = fopen($authorizationFile, 'ab+');
         if (!$authorizationHandle) {
             throw new Exception('Failed to subscribe: Could not open ' .
             'required file(s).');
         }
-        if (fputs($authorizationHandle, "\n<$hash> : <$email>") === false) {
-            throw new Exception('Failed to subscribe. Could not write to ' .
-            'authorization file.');
+
+        if ($allowResendInvitation) {
+            /**
+             * we already have a pending invitation for this user, thus do not 
+             * create an additional (duplicate) entry in the pending invitation 
+             * list. Simply send the mail below.
+             */
+        } else {
+            if (fputs($authorizationHandle, "\n<$hash> : <$email>") === false) {
+                throw new Exception('Failed to subscribe. Could not write to ' .
+                'authorization file.');
+            }
         }
+
         @fclose($authorizationHandle);
 
         $authUrl = self::getCurrentUrl(true) . '?list=' . $list .
@@ -642,26 +680,41 @@ abstract class PhpMailingList {
         $from = $list . ' <' . Config::get('email_reply_to') . '>';
         $subject = Config::__('MessageFromList')
                 . ' "' . $list . '"';
+        $replyToUrl = self::getCurrentUrl(true) . '?list=' . $list;
 
         // assemble message
         $messageOriginal = $message;
-        $message .= "\n\n**" . Config::__('ReplyToLink') .
-                ":\n\n" .
-                self::getCurrentUrl(true) . '?list=' . $list;
+        $message .= "\n\n___________________________________________________________________\n"
+                . Config::__('ReplyToLink') . ": ";
         $messageId = rand(10000, 999999) . time(); //yeah, a little too deterministic ;)
-        $message .= '&msgId=' . $messageId;
+
+        $replyToUrl .= '&msgId=' . $messageId;
 
         // check for Google Analytics campaign tracking
         if (Config::get('google_analytics_campaign_tracking_source') != '' &&
                 Config::get('google_analytics_campaign_tracking_medium') != '' &&
                 Config::get('google_analytics_campaign_tracking_campaign') != '') {
-            $message .= '&utm_source='
+            $replyToUrl .= '&utm_source='
                     . Config::get('google_analytics_campaign_tracking_source')
                     . '&utm_medium='
                     . Config::get('google_analytics_campaign_tracking_medium')
                     . '&utm_campaign='
                     . Config::get('google_analytics_campaign_tracking_campaign');
         }
+
+        /**
+         * shorten reply URL using Google urlshortener API
+         */
+        try {
+            if (Config::get('google_urlshortener_api_token') != '') {
+                $googleShortUrl = new Googl(Config::get('google_urlshortener_api_token'));
+                $replyToUrl = $googleShortUrl->shorten($replyToUrl);
+            }
+        } catch (Exception $e) {
+            Log::log('Failed to generated short URL for ' . $replyToUrl);
+        }
+
+        $message .= $replyToUrl;
 
         // assemble recipients
         $recipients = '';

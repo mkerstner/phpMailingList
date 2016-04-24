@@ -10,6 +10,16 @@ Legend:
 
 
 ---------------------------------
+Version 3.2.0 - Apr 24, 2016
+---------------------------------
+
++ added support for short urls in mails using Google URL shortener API in order 
+  to avoid "spamy" reply links
++ added option to resend invitation to pending members via admin interface
+
+=> make sure to update your config.ini.
+
+---------------------------------
 Version 3.1.0 - Nov 15, 2015
 ---------------------------------
 
