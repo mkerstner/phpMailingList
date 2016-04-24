@@ -3,7 +3,7 @@
 
  A simple mailing list manager written in PHP.
 
- Copyright (C) 2015 Matthias Kerstner <matthias@kerstner.at>
+ Copyright (C) 2016 Matthias Kerstner <matthias@kerstner.at>
  See https://www.kerstner.at/phpmailinglist/ for more information.
 ================================================================================
 
@@ -11,7 +11,7 @@
 REQUIREMENTS
 -------------------------
 
-+ PHP 5.3 and higher
++ PHP 5.3 and higher. Works perfectly with PHP 7+.
 
 
 INSTALLATION
@@ -20,12 +20,12 @@ INSTALLATION
 1) Extract archive to root folder of your webserver, e.g. /wwwroot/phpmailinglist/
 
 2) Edit config.ini to your needs, make sure to specify a valid email for 
-    "email_reply_to".
+   "email_reply_to".
 
 3) Customize form.php, error.php and admin.php to your needs.
 
 4) Be sure to set correct permissions for the lists- and tmp-directory set in
-    config.ini.
+   config.ini.
 
 5) In case you want to password protect your list create a password file. This
    file should only contain one line - the md5 hash'ed value of your password,
@@ -92,6 +92,14 @@ This is the default behavior.
 
 If you want your users to log in order to be able to send messages activate the
 option require_authentication in the configuration.
+
+3) SHORT URLs
+
+As of version 3.2.0 phpMailingList also offers the possibility to use Google's
+URL shortener API to get pretty reply links in your mail.
+
+In order to enable this feature enter you API token in config.ini and you are 
+all set.
 
 
 ADDITIONAL INFORMATION
